@@ -289,7 +289,6 @@
     <div class="container">
         <!-- 第1列：参数 + 按钮 -->
         <div class="controls">
-            <h1>地图格子生成工具</h1>
             <div class="input-group">
                 <label for="mapWidth">地图宽度 (像素):</label>
                 <input type="number" id="mapWidth" value="1199" min="100" max="2000">
@@ -320,7 +319,6 @@
 
         <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
         <div class="layer-panel">
-            <h1>圈层操作</h1>
             <div class="layer-controls">
                 <label for="layerSelect">圈层列表（多选）</label>
                 <select id="layerSelect" multiple></select>
@@ -330,11 +328,12 @@
                 </div>
                 <hr style="margin:12px 0;">
 
-                <label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，多选）</label>
+                <label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，可多选）</label>
                 <select id="monsterSelect" multiple></select>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <label style="font-size:13px;color:#333;">每怪物数量：</label>
-                    <input id="monsterQuantity" type="number" value="1" min="1" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                    <label style="font-size:13px;color:#333;">怪物数量：</label>
+                    <input id="monsterQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                    <button id="setMonsterQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
                     <button id="applyMonsterBtn">添加怪物到选择圈层</button>
@@ -342,16 +341,17 @@
 
                 <hr style="margin:12px 0;">
 
-                <label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，多选）</label>
+                <label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，可多选）</label>
                 <select id="resourceSelect" multiple></select>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <label style="font-size:13px;color:#333;">每资源数量：</label>
-                    <input id="resourceQuantity" type="number" value="1" min="1" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                    <label style="font-size:13px;color:#333;">资源数量：</label>
+                    <input id="resourceQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                    <button id="setResourceQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:8px;">
                     <button id="applyResourceBtn">添加资源到选择圈层</button>
                 </div>
-
+                <hr style="margin:10px 0;">
                 <div style="display:flex; gap:8px; margin-top:10px;">
                     <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
                 </div>
@@ -448,6 +448,22 @@
                     this.exportSeparatedData();
                 });
 
+                // Set quantity buttons for batch or single selection edits
+                document.getElementById('setMonsterQtyBtn').addEventListener('click', () => {
+                    this.setItemQuantity(1);
+                });
+                document.getElementById('setResourceQtyBtn').addEventListener('click', () => {
+                    this.setItemQuantity(2);
+                });
+
+                // synchronize select -> quantity input when selection changes
+                document.getElementById('monsterSelect').addEventListener('change', () => {
+                    this.syncQuantityInputFromSelection(1);
+                });
+                document.getElementById('resourceSelect').addEventListener('change', () => {
+                    this.syncQuantityInputFromSelection(2);
+                });
+
                 // unified event to map coordinate
                 this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
                 this.canvas.addEventListener('mousemove', (e) => this.handleCanvasHover(e));
@@ -470,14 +486,19 @@
             loadResourcesFromGlobal() {
                 // 读取全局 MAP_RESOURCES（由 map-resources.js 提供）
                 if (window.MAP_RESOURCES && Array.isArray(window.MAP_RESOURCES)) {
-                    this.allItems = window.MAP_RESOURCES.map(i => ({ id: i.id, name: i.name, type: i.type }));
+                    // 把数量标准化为非负整数（负数视为 0），默认 0
+                    this.allItems = window.MAP_RESOURCES.map(i => {
+                        const q = (i.qty != null) ? parseInt(i.qty) : 0;
+                        const safeQ = isNaN(q) ? 0 : Math.max(0, q);
+                        return { id: i.id, name: i.name, type: i.type, qty: safeQ };
+                    });
                 } else {
                     this.allItems = [];
                     console.warn('MAP_RESOURCES 未定义或格式不对，资源/怪物列表为空。');
                 }
 
-                this.monsters = this.allItems.filter(i => Number(i.type) === 1);
-                this.resources = this.allItems.filter(i => Number(i.type) === 2);
+                this.monsters = this.allItems.filter(i => Number(i.type) === 1).map(i => Object.assign({}, i));
+                this.resources = this.allItems.filter(i => Number(i.type) === 2).map(i => Object.assign({}, i));
 
                 this.updateMonsterList();
                 this.updateResourceList();
@@ -489,9 +510,16 @@
                 for (const r of this.monsters) {
                     const opt = document.createElement('option');
                     opt.value = String(r.id);
-                    opt.text = `${r.name} (${r.id})`;
+                    // 存储 qty 到 data 属性
+                    const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
+                    const safeQty = isNaN(qtyVal) ? 0 : Math.max(0, qtyVal); // 负数显示为 0
+                    opt.dataset.qty = String(safeQty);
+                    // 在选项文本中显示数量（负值显示为 0）
+                    opt.text = `${r.name} (${r.id}) (数量:${safeQty})`;
                     sel.appendChild(opt);
                 }
+                // try to sync quantity input when list refreshed
+                this.syncQuantityInputFromSelection(1);
             }
 
             updateResourceList() {
@@ -500,9 +528,86 @@
                 for (const r of this.resources) {
                     const opt = document.createElement('option');
                     opt.value = String(r.id);
-                    opt.text = `${r.name} (${r.id})`;
+                    const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
+                    const safeQty = isNaN(qtyVal) ? 0 : Math.max(0, qtyVal);
+                    opt.dataset.qty = String(safeQty);
+                    opt.text = `${r.name} (${r.id}) (数量:${safeQty})`;
                     sel.appendChild(opt);
                 }
+                this.syncQuantityInputFromSelection(2);
+            }
+
+            // 当用户在列表中选择时，更新"每项数量"输入框显示
+            // 若多选且所有选中项的数量相同，则显示该数量；否则清空输入框以提示用户这是混合值
+            syncQuantityInputFromSelection(type) {
+                const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+                const selectedOptions = Array.from(select.selectedOptions || []);
+                if (selectedOptions.length === 0) {
+                    // show nothing / keep default
+                    // do not override user manual edits if none selected
+                    return;
+                }
+                const qtys = selectedOptions.map(opt => {
+                    const v = opt.dataset.qty;
+                    const n = Number(v);
+                    return isNaN(n) ? null : n;
+                });
+                const allSame = qtys.every(q => q === qtys[0]);
+                if (allSame) {
+                    input.value = qtys[0] != null ? qtys[0] : '';
+                } else {
+                    input.value = '';
+                }
+            }
+
+            // 将输入框的数量设置到选中的列表项（支持多选批量设置，也支持单个设置）
+            setItemQuantity(type) {
+                const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+                let val = parseInt(input.value);
+                if (isNaN(val)) {
+                    alert('请输入有效数量（整数）。');
+                    return;
+                }
+                // 负值视为 0
+                val = Math.max(0, val);
+
+                const selOpts = Array.from(select.selectedOptions || []);
+                if (selOpts.length === 0) {
+                    alert('请先在列表中选择一个或多个项，再设置数量。');
+                    return;
+                }
+                // update underlying data arrays
+                const arr = (type === 1) ? this.monsters : this.resources;
+                for (const opt of selOpts) {
+                    const idStr = String(opt.value);
+                    opt.dataset.qty = String(val);
+                    // 更新文本显示，保证旧有的 (数量:...) 会被替换
+                    const base = this._getBaseTextForOption(opt.textContent || '', idStr);
+                    opt.text = `${base} (数量:${val})`;
+                    // 更新数组 entry
+                    const found = arr.find(a => String(a.id) === idStr);
+                    if (found) {
+                        found.qty = val;
+                    } else {
+                        // 如果找不到，插入一项（保守处理）
+                        arr.push({ id: idStr, name: base.split(' (')[0], type: type, qty: val });
+                    }
+                }
+            }
+
+            // helper to try to reconstruct base name/id text without existing (数量:...) suffix
+            _getBaseTextForOption(fullText, idStr) {
+                // fullText might be like: "名字 (123) (数量:5)" or "名字 (123)"
+                // ensure we return "名字 (123)"
+                const idToken = `(${idStr})`;
+                const idx = fullText.indexOf(idToken);
+                if (idx >= 0) {
+                    return fullText.substring(0, idx + idToken.length).trim();
+                }
+                // fallback
+                return fullText.split('(数量:')[0].trim();
             }
 
             generateMap() {
@@ -1003,154 +1108,123 @@
                 }
             }
 
-            // 更新选择框的选中状态（用于生成地图后重置）
             updateLayerSelectSelection() {
-                const select = document.getElementById('layerSelect');
-                for (const opt of select.options) {
-                    opt.selected = false;
-                }
+                // no-op for now; kept for compatibility
             }
 
-            // 应用高亮：读取选择框的值并设置 highlightedLayers，然后重绘
             applyLayerHighlight() {
-                const select = document.getElementById('layerSelect');
-                const selected = Array.from(select.selectedOptions).map(o => parseInt(o.value, 10));
-                if (!selected || selected.length === 0) {
-                    alert('请先选择至少一个圈层再点击高亮。');
-                    return;
-                }
-                this.highlightedLayers = new Set(selected);
+                const sel = document.getElementById('layerSelect');
+                const selected = Array.from(sel.selectedOptions).map(o => Number(o.value));
+                this.highlightedLayers.clear();
+                for (const s of selected) this.highlightedLayers.add(s);
                 this.drawMap();
             }
 
             clearLayerHighlight() {
-                if (this.highlightedLayers && this.highlightedLayers.size > 0) {
-                    this.highlightedLayers.clear();
-                    this.updateLayerSelectSelection();
-                    this.drawMap();
-                }
+                this.highlightedLayers.clear();
+                const sel = document.getElementById('layerSelect');
+                for (const o of Array.from(sel.options)) o.selected = false;
+                this.drawMap();
             }
 
-            // 通用：根据类型（1=怪物,2=资源）把所选项添加到选择的圈层
+            // 将选中的怪物/资源按各自的 qty 添加到被选圈层的格子上
             applyItemsToSelectedLayers(type) {
-                const layerSelect = document.getElementById('layerSelect');
-                const selLayers = Array.from(layerSelect.selectedOptions).map(o => parseInt(o.value, 10));
-                if (!selLayers || selLayers.length === 0) {
+                // selected layers
+                const layerSel = document.getElementById('layerSelect');
+                const selectedLayers = Array.from(layerSel.selectedOptions).map(o => Number(o.value));
+                if (selectedLayers.length === 0) {
                     alert('请先选择至少一个圈层。');
                     return;
                 }
 
-                let selIds = [];
-                let qty = 1;
-                if (type === 1) {
-                    const sel = document.getElementById('monsterSelect');
-                    selIds = Array.from(sel.selectedOptions).map(o => parseInt(o.value, 10));
-                    qty = Math.max(1, parseInt(document.getElementById('monsterQuantity').value) || 1);
-                } else {
-                    const sel = document.getElementById('resourceSelect');
-                    selIds = Array.from(sel.selectedOptions).map(o => parseInt(o.value, 10));
-                    qty = Math.max(1, parseInt(document.getElementById('resourceQuantity').value) || 1);
-                }
-
-                if (!selIds || selIds.length === 0) {
-                    alert('请先从对应列表中选择至少一个项。');
+                const listSel = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                const arr = (type === 1) ? this.monsters : this.resources;
+                const selectedOpts = Array.from(listSel.selectedOptions || []);
+                if (selectedOpts.length === 0) {
+                    alert('请先在怪物/资源列表中选择要添加的项（可多选）。');
                     return;
                 }
 
-                let appliedCount = 0;
-                for (const cell of this.cells) {
-                    if (selLayers.includes(cell.layer)) {
-                        for (const id of selIds) {
-                            const exist = cell.resources.find(r => Number(r.id) === Number(id) && Number(r.type) === Number(type));
-                            if (exist) {
-                                exist.qty = Number(exist.qty) + qty;
-                            } else {
-                                cell.resources.push({ type: Number(type), id: Number(id), qty: Number(qty) });
-                            }
-                        }
-                        appliedCount++;
+                // for each selected item, get qty from data or underlying array
+                const itemsToApplyAll = selectedOpts.map(opt => {
+                    const idStr = String(opt.value);
+                    const found = arr.find(a => String(a.id) === idStr);
+                    const qtyRaw = (found && found.qty != null) ? Number(found.qty) : (Number(opt.dataset.qty) || 0);
+                    const qty = isNaN(qtyRaw) ? 0 : qtyRaw;
+                    return { id: idStr, qty: qty };
+                });
+
+                // Filter out items with qty === 0 (do not add them)
+                const itemsToApply = itemsToApplyAll.filter(it => Number(it.qty) > 0);
+                const skippedZeroItems = itemsToApplyAll.length - itemsToApply.length;
+
+                if (itemsToApply.length === 0) {
+                    // All selected items have qty 0 -> prevent adding and inform user
+                    alert('选中的项中所有数量均为 0，无法添加到圈层，请先将数量设为大于 0。');
+                    return;
+                }
+
+                // find all cells in selected layers
+                const targetCells = this.cells.filter(c => selectedLayers.includes(c.layer));
+                if (targetCells.length === 0) {
+                    alert('选中的圈层没有任何格子。');
+                    return;
+                }
+
+                // Add only items with qty > 0
+                for (const cell of targetCells) {
+                    for (const it of itemsToApply) {
+                        cell.resources.push({ type, id: it.id, qty: it.qty });
                     }
                 }
+
                 this.drawMap();
-                //const typeName = type === 1 ? '怪物' : '资源';
-                //alert(`已将 ${selIds.length} 个${typeName} 分配到 ${appliedCount} 个格子（圈层）。`);
+
+                // Provide informative alert: success + info about skipped zero-qty items
+                let msg = `添加完成：共 ${itemsToApply.length} 项已添加到 ${targetCells.length} 个格子（每项数量>0）。`;
+                if (skippedZeroItems > 0) {
+                    msg += `\n有 ${skippedZeroItems} 项因数量为 0 被跳过，未添加。`;
+                }
+                alert(msg);
             }
 
-            // 导出：怪物与资源分开导出，格式：格子ID: id;qty|id;qty
-            // 顺序：怪物数据（若存在） -> 空一行 -> 资源数据（若存在）
             exportSeparatedData() {
-                if (this.cells.length === 0) {
-                    alert('请先生成地图！');
-                    return;
-                }
-
-                const monsterLines = [];
-                const resourceLines = [];
-
-                for (const cell of this.cells) {
-                    if (!cell.resources || cell.resources.length === 0) continue;
-
-                    // 收集此格的怪物（type=1）
-                    const monsters = cell.resources.filter(r => Number(r.type) === 1);
-                    if (monsters.length > 0) {
-                        const parts = monsters.map(m => `${m.id};${m.qty}`).join('|');
-                        monsterLines.push(`${cell.id}:${parts}`);
-                    }
-
-                    // 收集此格的资源（type=2）
-                    const resources = cell.resources.filter(r => Number(r.type) === 2);
-                    if (resources.length > 0) {
-                        const parts = resources.map(r => `${r.id};${r.qty}`).join('|');
-                        resourceLines.push(`${cell.id}:${parts}`);
+                // export monsters first then empty line then resources
+                const monsters = [];
+                const resources = [];
+                for (const c of this.cells) {
+                    if (!c.resources || c.resources.length === 0) continue;
+                    for (const r of c.resources) {
+                        if (r.type === 1) {
+                            monsters.push({ cellId: c.id, id: r.id, qty: r.qty });
+                        } else if (r.type === 2) {
+                            resources.push({ cellId: c.id, id: r.id, qty: r.qty });
+                        }
                     }
                 }
+                const lines = [];
+                for (const m of monsters) lines.push(`cell:${m.cellId}, id:${m.id}, qty:${m.qty}`);
+                lines.push('');
+                for (const r of resources) lines.push(`cell:${r.cellId}, id:${r.id}, qty:${r.qty}`);
 
-                if (monsterLines.length === 0 && resourceLines.length === 0) {
-                    alert('没有任何已分配的怪物或资源可导出。');
-                    return;
-                }
-
-                // 组装内容：怪物部分（可为空），空行，资源部分（可为空）
-                // 如果某一部分为空，则该部分留空行或直接只有空行间隔
-                const top = monsterLines.length > 0 ? monsterLines.join('\n') : '';
-                const bottom = resourceLines.length > 0 ? resourceLines.join('\n') : '';
-                const content = top + '\n\n' + bottom;
-
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `map_export_monsters_and_resources_${Date.now()}.txt`;
-                document.body.appendChild(a);
+                a.download = 'export.txt';
                 a.click();
-                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }
 
             printData() {
-                if (this.cells.length === 0) {
-                    alert('请先生成地图！');
-                    return;
-                }
-                let content = '';
-                this.cells.forEach(cell => {
-                    const coords = cell.originalCoordinates.map(c => `${Math.round(c[0])};${Math.round(c[1])}`).join('|');
-                    content += `${cell.id}:${coords}\n`;
-                });
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `map_data_angle${this.mapAngle}_${Date.now()}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                console.log('cells:', this.cells);
+                alert('已在控制台输出当前格子数据（包含分配项）。');
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new MapTools();
+        // instantiate
+        window.addEventListener('DOMContentLoaded', () => {
+            window.mapTools = new MapTools();
         });
     </script>
 </body>
