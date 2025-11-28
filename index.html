@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图格子生成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 300px;
+            flex-shrink: 0;
+        }
+
+        .controls h1 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .input-hint {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        #generateBtn {
+            background-color: #007bff;
+            color: white;
+            grid-column: span 2;
+        }
+
+        #generateBtn:hover {
+            background-color: #0056b3;
+        }
+
+        #zoomInBtn, #zoomOutBtn, #resetZoomBtn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        #zoomInBtn:hover, #zoomOutBtn:hover, #resetZoomBtn:hover {
+            background-color: #1e7e34;
+        }
+
+        #printBtn {
+            background-color: #dc3545;
+            color: white;
+            grid-column: span 2;
+        }
+
+        #printBtn:hover {
+            background-color: #c82333;
+        }
+
+        .info-panel {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        #cellInfo {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        #mapAngle {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        #angleValue {
+            display: block;
+            text-align: center;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .preset-btn {
+            padding: 5px 8px;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .preset-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .canvas-container {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+
+        #mapCanvas {
+            border: 1px solid #ccc;
+            cursor: crosshair;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .controls {
+                width: 100%;
+            }
+
+            .canvas-container {
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>地图格子生成工具</h1>
+            <div class="input-group">
+                <label for="mapWidth">地图宽度 (像素):</label>
+                <input type="number" id="mapWidth" value="1199" min="100" max="2000">
+                <small class="input-hint">范围: 100-2000像素</small>
+            </div>
+            <div class="input-group">
+                <label for="mapHeight">地图高度 (像素):</label>
+                <input type="number" id="mapHeight" value="1199" min="100" max="2000">
+                <small class="input-hint">范围: 100-2000像素</small>
+            </div>
+            <div class="input-group">
+                <label for="cellSize">格子边长 (像素):</label>
+                <input type="number" id="cellSize" value="100" min="10" max="200">
+                <small class="input-hint">范围: 10-200像素</small>
+            </div>
+            <div class="button-group">
+                <button id="generateBtn">生成地图</button>
+                <button id="zoomInBtn">放大</button>
+                <button id="zoomOutBtn">缩小</button>
+                <button id="printBtn">打印数据</button>
+            </div>
+            <div class="info-panel">
+                <h3>格子信息</h3>
+                <p id="cellInfo">点击格子查看详细信息</p>
+            </div>
+        </div>
+        <div class="canvas-container">
+            <canvas id="mapCanvas"></canvas>
+        </div>
+    </div>
+    <script>
+        // 简化的测试管理器，仅记录操作日志
+        class TestManager {
+            constructor() {
+                this.testRecords = [];
+            }
+
+            createTestRecord(operation, data) {
+                const record = {
+                    operation,
+                    data,
+                    timestamp: new Date().toISOString()
+                };
+                this.testRecords.push(record);
+                console.log(`测试记录: ${operation}`, data);
+            }
+
+            getTestRecords() {
+                return this.testRecords;
+            }
+        }
+
+        class MapTools {
+            constructor() {
+                this.canvas = document.getElementById('mapCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.cells = [];
+                this.selectedCell = null;
+                this.zoom = 1;
+                this.mapWidth = 800;
+                this.mapHeight = 600;
+                this.cellSize = 100;
+                this.mapAngle = 0; // 地图倾斜角度（度）
+
+                // 拖拽相关变量
+                this.isDragging = false;
+                this.dragStartX = 0;
+                this.dragStartY = 0;
+                this.mapOffsetX = 0; // 地图偏移量
+                this.mapOffsetY = 0;
+
+                // 初始化测试管理器
+                this.testManager = new TestManager();
+
+                this.initEventListeners();
+                this.initKeyboardShortcuts();
+                this.generateMap();
+            }
+
+            initEventListeners() {
+                document.getElementById('generateBtn').addEventListener('click', () => {
+                    // 生成地图后创建测试记录
+                    this.testManager.createTestRecord('地图生成', {
+                        mapWidth: this.mapWidth,
+                        mapHeight: this.mapHeight,
+                        cellSize: this.cellSize,
+                        mapAngle: this.mapAngle,
+                        timestamp: new Date().toISOString()
+                    });
+                    this.generateMap();
+                });
+
+                document.getElementById('zoomInBtn').addEventListener('click', () => {
+                    this.testManager.createTestRecord('缩放测试', {
+                        zoomLevel: this.zoom,
+                        action: '放大',
+                        timestamp: new Date().toISOString()
+                    });
+                    this.changeZoom(0.1);
+                });
+
+                document.getElementById('zoomOutBtn').addEventListener('click', () => {
+                    this.testManager.createTestRecord('缩放测试', {
+                        zoomLevel: this.zoom,
+                        action: '缩小',
+                        timestamp: new Date().toISOString()
+                    });
+                    this.changeZoom(-0.1);
+                });
+
+                document.getElementById('printBtn').addEventListener('click', () => {
+                    this.testManager.createTestRecord('数据导出', {
+                        action: '导出数据',
+                        timestamp: new Date().toISOString()
+                    });
+                    this.printData();
+                });
+
+                // 预设角度按钮
+                this.setupPresetButtons();
+
+                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleCanvasHover(e));
+
+                // 添加拖拽事件监听器
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault(); // 阻止右键菜单
+                });
+
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                this.canvas.addEventListener('mouseleave', (e) => this.handleMouseUp(e));
+            }
+
+            initKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // 防止在输入框中触发快捷键
+                    if (e.target.tagName === 'INPUT') return;
+
+                    switch(e.key.toLowerCase()) {
+                        case 'g': // G - 生成地图
+                            e.preventDefault();
+                            document.getElementById('generateBtn').click();
+                            break;
+                        case '+':
+                        case '=': // +/= - 放大
+                            e.preventDefault();
+                            document.getElementById('zoomInBtn').click();
+                            break;
+                        case '-': // - - 缩小
+                            e.preventDefault();
+                            document.getElementById('zoomOutBtn').click();
+                            break;
+                        case '0': // 0 - 重置缩放
+                            e.preventDefault();
+                            document.getElementById('resetZoomBtn').click();
+                            break;
+                        case 's': // S - 导出数据
+                            e.preventDefault();
+                            document.getElementById('printBtn').click();
+                            break;
+                        case '1': // 1 - 0度视角
+                            e.preventDefault();
+                            document.querySelector('[data-angle="0"]').click();
+                            break;
+                        case '2': // 2 - 45度视角
+                            e.preventDefault();
+                            document.querySelector('[data-angle="45"]').click();
+                            break;
+                    }
+                });
+            }
+
+            setupPresetButtons() {
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const angle = parseInt(e.target.dataset.angle);
+
+                        this.testManager.createTestRecord('角度切换', {
+                            fromAngle: this.mapAngle,
+                            toAngle: angle,
+                            timestamp: new Date().toISOString()
+                        });
+
+                        this.mapAngle = angle;
+                        this.updatePresetButtons();
+                        this.updateCanvasSize();
+                        this.drawMap();
+                    });
+                });
+            }
+
+            updatePresetButtons() {
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    const angle = parseInt(btn.dataset.angle);
+                    if (angle === this.mapAngle) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                // 创建测试记录
+                if (this.testManager) {
+                    this.testManager.createTestRecord('角度切换', {
+                        fromAngle: this.mapAngle,
+                        toAngle: this.mapAngle,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+
+            generateMap() {
+                // 获取输入值
+                this.mapWidth = parseInt(document.getElementById('mapWidth').value);
+                this.mapHeight = parseInt(document.getElementById('mapHeight').value);
+                this.cellSize = parseInt(document.getElementById('cellSize').value);
+                // mapAngle 通过预设按钮设置，无需从输入框获取
+
+                // 验证输入
+                if (this.mapWidth < 100 || this.mapWidth > 2000 ||
+                    this.mapHeight < 100 || this.mapHeight > 2000 ||
+                    this.cellSize < 10 || this.cellSize > 200) {
+                    alert('请输入有效的参数范围：\n地图边长: 100-2000像素\n格子边长: 10-200像素');
+                    return;
+                }
+
+                // 验证角度
+                if (this.mapAngle !== 0 && this.mapAngle !== 45) {
+                    alert('请选择有效的角度：0° 或 45°');
+                    return;
+                }
+
+                // 计算格子数量（使用Math.ceil确保边界覆盖）
+                this.cols = Math.ceil(this.mapWidth / this.cellSize);
+                this.rows = Math.ceil(this.mapHeight / this.cellSize);
+
+                // 生成格子数据（逆时针螺旋生成）
+                this.generateCellsSpiral();
+
+                // 设置画布大小
+                this.updateCanvasSize();
+
+                // 绘制地图
+                this.drawMap();
+
+                // 更新预设按钮状态
+                this.updatePresetButtons();
+            }
+
+            generateCellsSpiral() {
+                this.cells = [];
+                let cellId = 1;
+
+                // 计算层数
+                const layers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+
+                for (let layer = 0; layer < layers; layer++) {
+                    const topRow = this.rows - 1 - layer;  // 顶部行
+                    const bottomRow = layer;                // 底部行（起点）
+                    const leftCol = layer;                  // 左侧列（起点）
+                    const rightCol = this.cols - 1 - layer; // 右侧列
+
+                    // 从当前圈的左下角开始，按逆时针顺序：右 → 上 → 左 → 下
+
+                    // 1. 向右填充（下边界）
+                    for (let col = leftCol; col <= rightCol; col++) {
+                        this.addCell(bottomRow, col, cellId++);
+                    }
+
+                    // 2. 向上填充（右边界，排除已经填充的右下角）
+                    for (let row = bottomRow + 1; row <= topRow; row++) {
+                        this.addCell(row, rightCol, cellId++);
+                    }
+
+                    // 3. 向左填充（上边界，排除已经填充的右上角）
+                    for (let col = rightCol - 1; col >= leftCol; col--) {
+                        this.addCell(topRow, col, cellId++);
+                    }
+
+                    // 4. 向下填充（左边界，排除已经填充的左上角和左下角）
+                    for (let row = topRow - 1; row > bottomRow; row--) {
+                        this.addCell(row, leftCol, cellId++);
+                    }
+                }
+            }
+
+            addCell(row, col, id) {
+                // 使用坐标计算公式：格子边长N像素，坐标范围为0到N-1
+                const cellSizeMinusOne = this.cellSize - 1;
+
+                // 坐标顺序：左下角 → 左上角 → 右上角 → 右下角（逆时针）
+                const originalCoordinates = [
+                    [col * this.cellSize, row * this.cellSize],                                    // 左下角: (0, 0)
+                    [col * this.cellSize, row * this.cellSize + cellSizeMinusOne],                 // 左上角: (0, 99)
+                    [col * this.cellSize + cellSizeMinusOne, row * this.cellSize + cellSizeMinusOne], // 右上角: (99, 99)
+                    [col * this.cellSize + cellSizeMinusOne, row * this.cellSize]                  // 右下角: (99, 0)
+                ];
+
+                // 如果没有倾斜，直接使用原始坐标
+                if (this.mapAngle === 0) {
+                    this.cells.push({
+                        id: id,
+                        row: row,
+                        col: col,
+                        x: col * this.cellSize,
+                        y: row * this.cellSize,
+                        coordinates: originalCoordinates,
+                        originalCoordinates: originalCoordinates
+                    });
+                    return;
+                }
+
+                // 基于(0,0)原点的旋转变换
+                const angleRad = this.mapAngle * Math.PI / 180; // 正值实现逆时针旋转（左旋）
+                const cosAngle = Math.cos(angleRad);
+                const sinAngle = Math.sin(angleRad);
+
+                // 对每个坐标点进行原点旋转变换
+                const coordinates = originalCoordinates.map(([x, y]) => {
+                    // 原点旋转公式：
+                    // newX = x * cos(angle) - y * sin(angle)
+                    // newY = x * sin(angle) + y * cos(angle)
+                    const transformedX = x * cosAngle - y * sinAngle;
+                    const transformedY = x * sinAngle + y * cosAngle;
+                    return [transformedX, transformedY];
+                });
+
+                this.cells.push({
+                    id: id,
+                    row: row,
+                    col: col,
+                    x: col * this.cellSize,
+                    y: row * this.cellSize,
+                    coordinates: coordinates,
+                    originalCoordinates: originalCoordinates
+                });
+            }
+
+            updateCanvasSize() {
+                // 计算倾斜后的实际显示区域
+                if (this.mapAngle === 0) {
+                    // 0度时使用原始尺寸
+                     this.canvas.width = this.mapWidth * this.zoom;
+                     this.canvas.height = this.mapHeight * this.zoom;
+                    // 重置偏移量
+                    this.mapOffsetX = 0;
+                    this.mapOffsetY = 0;
+                } else {
+                    // 倾斜时需要更大的显示区域来容纳变换后的地图
+                    const angleRad = -this.mapAngle * Math.PI / 180;
+                    const sinAngle = Math.sin(angleRad);
+                    const cosAngle = Math.cos(angleRad);
+
+                    // 计算四个角的变换后的坐标
+                    const corners = [
+                        [0, 0],                           // 左下角
+                        [0, this.mapHeight],              // 左上角
+                        [this.mapWidth, this.mapHeight],  // 右上角
+                        [this.mapWidth, 0]                // 右下角
+                    ];
+
+                    // 应用完整的2D旋转变换（坐标轴XY一起旋转）
+                    const transformedCorners = corners.map(([x, y]) => {
+                        const newX = x * cosAngle - y * sinAngle;
+                        const newY = x * sinAngle + y * cosAngle;
+                        return [newX, newY];
+                    });
+
+                    // 计算变换后的边界
+                    const minX = Math.min(...transformedCorners.map(c => c[0]));
+                    const maxX = Math.max(...transformedCorners.map(c => c[0]));
+                    const minY = Math.min(...transformedCorners.map(c => c[1]));
+                    const maxY = Math.max(...transformedCorners.map(c => c[1]));
+
+                    // 设置画布大小，添加一些边距
+                    const padding = 20;
+                    this.canvas.width = (maxX - minX + padding * 2) * this.zoom;
+                    this.canvas.height = (maxY - minY + padding * 2) * this.zoom;
+
+                    // 存储偏移量用于绘制时居中
+                    this.mapOffsetX = (-minX + padding) * this.zoom;
+                    this.mapOffsetY = (-minY + padding) * this.zoom;
+                }
+            }
+
+            drawMap() {
+                // 清空画布
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // 应用缩放
+                this.ctx.save();
+                this.ctx.scale(this.zoom, this.zoom);
+
+                // 应用坐标系统转换（左下角为原点）
+                this.ctx.translate(0, this.mapHeight);
+                this.ctx.scale(1, -1);
+
+                // 应用地图偏移（包括拖拽偏移）
+                if (this.mapOffsetX !== undefined && this.mapOffsetY !== undefined) {
+                    // 应用偏移量
+                    this.ctx.translate(this.mapOffsetX / this.zoom, this.mapOffsetY / this.zoom);
+                }
+
+                // 绘制所有格子
+                this.cells.forEach(cell => {
+                    this.drawCell(cell, cell === this.selectedCell);
+                });
+
+                // 绘制坐标轴
+                this.drawCoordinateAxis();
+
+                this.ctx.restore();
+            }
+
+            drawCell(cell, isSelected) {
+                const { coordinates, id, row, col } = cell;
+
+                // 设置样式
+                this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
+                this.ctx.lineWidth = isSelected ? 2 : 1;
+
+                // 填充颜色
+                if (isSelected) {
+                    this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                } else {
+                    this.ctx.fillStyle = (row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff';
+                }
+
+                // 绘制格子
+                this.ctx.beginPath();
+                this.ctx.moveTo(coordinates[0][0], coordinates[0][1]);
+                for (let i = 1; i < coordinates.length; i++) {
+                    this.ctx.lineTo(coordinates[i][0], coordinates[i][1]);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // 绘制格子编号 - 根据缩放级别动态调整字体大小
+                // 使用缩放的平方根来平衡视觉效果，确保在小缩放时文字不会太小
+                const fontSize = Math.max(40, Math.min(20, 12 * Math.sqrt(this.zoom)));
+                this.ctx.save();
+                this.ctx.scale(1, -1); // 翻转文字使其正向显示
+                this.ctx.fillStyle = isSelected ? '#ff0000' : '#666';
+                this.ctx.font = `${fontSize}px Arial`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                const centerX = (coordinates[0][0] + coordinates[2][0]) / 2;
+                const centerY = (coordinates[0][1] + coordinates[2][1]) / 2;
+                this.ctx.fillText(id.toString(), centerX, -centerY);
+                this.ctx.restore();
+            }
+
+            drawCoordinateAxis() {
+                this.ctx.strokeStyle = '#000';
+                this.ctx.lineWidth = 2;
+
+                // 绘制X轴
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(this.mapWidth, 0);
+                this.ctx.stroke();
+
+                // 绘制Y轴
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, 0);
+                this.ctx.lineTo(0, this.mapHeight);
+                this.ctx.stroke();
+
+                // 标记原点和坐标轴 - 也根据缩放调整
+                const fontSize = Math.max(10, Math.min(16, 14 * Math.sqrt(this.zoom)));
+                this.ctx.save();
+                this.ctx.scale(1, -1); // 翻转文字使其正向显示
+                this.ctx.fillStyle = '#000';
+                this.ctx.font = `${fontSize}px Arial`;
+                this.ctx.textAlign = 'left';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText('0,0', 10, -10);
+                this.ctx.fillText('X', this.mapWidth - 15, -10);
+                this.ctx.fillText('Y', 10, -(this.mapHeight - 10));
+                this.ctx.restore();
+            }
+
+            // 用于将屏幕坐标转换为地图坐标的辅助函数
+            screenToMapCoordinates(screenX, screenY) {
+                // 从屏幕坐标转换到Canvas坐标（应用缩放逆变换）
+                let x = screenX;
+                let y = screenY;
+
+                // 应用缩放的逆变换
+                x /= this.zoom;
+                y /= this.zoom;
+
+                // 应用偏移的逆变换
+                x -= this.mapOffsetX / this.zoom;
+                y -= this.mapOffsetY / this.zoom;
+
+                // 在绘制时我们应用了: scale(1, -1), translate(0, this.mapHeight)
+                // 所以我们需要反向操作: translate(0, -this.mapHeight), scale(1, -1)
+                y = this.mapHeight - y; // 反向翻转Y轴（先翻转，再移动到原点）
+                
+                // 如果是旋转状态，需要将屏幕坐标反向旋转以匹配地图坐标
+                if (this.mapAngle !== 0) {
+                    // 反向旋转以获得正确的地图坐标
+                    const angleRad = -this.mapAngle * Math.PI / 180; // 负值实现反向旋转
+                    const cosAngle = Math.cos(angleRad);
+                    const sinAngle = Math.sin(angleRad);
+
+                    const reverseX = x * cosAngle - y * sinAngle;
+                    const reverseY = x * sinAngle + y * cosAngle;
+
+                    x = reverseX;
+                    y = reverseY;
+                }
+
+                return { x, y };
+            }
+
+            handleCanvasClick(event) {
+                const rect = this.canvas.getBoundingClientRect();
+                const screenX = event.clientX - rect.left;
+                const screenY = event.clientY - rect.top;
+
+                // 使用辅助函数转换坐标
+                const { x, y } = this.screenToMapCoordinates(screenX, screenY);
+
+                // 查找点击的格子
+                const clickedCell = this.cells.find(cell => {
+                    const { coordinates } = cell;
+
+                    // 使用点在多边形内的算法检测点击
+                    return this.isPointInPolygon(x, y, coordinates);
+                });
+
+                if (clickedCell) {
+                    this.selectedCell = clickedCell;
+                    this.updateCellInfo(clickedCell);
+                    this.drawMap();
+                }
+            }
+
+            handleCanvasHover(event) {
+                const rect = this.canvas.getBoundingClientRect();
+                const screenX = event.clientX - rect.left;
+                const screenY = event.clientY - rect.top;
+
+                // 使用辅助函数转换坐标
+                const { x, y } = this.screenToMapCoordinates(screenX, screenY);
+
+                // 查找悬停的格子
+                const hoveredCell = this.cells.find(cell => {
+                    const { coordinates } = cell;
+
+                    // 使用点在多边形内的算法检测悬停
+                    return this.isPointInPolygon(x, y, coordinates);
+                });
+
+                this.canvas.style.cursor = hoveredCell ? 'pointer' : 'crosshair';
+            }
+
+            // 使用射线法检测点是否在多边形内
+            isPointInPolygon(x, y, polygon) {
+                let inside = false;
+                const n = polygon.length;
+
+                for (let i = 0, j = n - 1; i < n; j = i++) {
+                    const xi = polygon[i][0], yi = polygon[i][1];
+                    const xj = polygon[j][0], yj = polygon[j][1];
+
+                    const intersect = ((yi > y) !== (yj > y)) &&
+                        (x < (xi - xj) * (y - yi) / (yj - yi) + xi);
+
+                    if (intersect) inside = !inside;
+                }
+
+                return inside;
+            }
+
+            updateCellInfo(cell) {
+                const { id, row, col, originalCoordinates } = cell;
+
+                // 显示原始坐标（未倾斜的坐标），使用标准坐标顺序
+                const coordText = originalCoordinates.map((coord, index) => {
+                    const labels = ['左下角', '左上角', '右上角', '右下角'];
+                    const roundedCoord = [Math.round(coord[0]), Math.round(coord[1])];
+                    return `${labels[index]}: (${roundedCoord[0]}, ${roundedCoord[1]})`;
+                }).join('<br>');
+
+                // 计算格子属于第几圈
+                const layer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+
+                const angleInfo = this.mapAngle > 0 ?
+                    `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
+
+                document.getElementById('cellInfo').innerHTML = `
+                    <strong>格子 #${id}</strong><br>
+                    位置: 第${row + 1}行, 第${col + 1}列<br>
+                    圈层: 第${layer + 1}圈${angleInfo}<br>
+                    <strong>坐标点:</strong><br>
+                    ${coordText}
+                `;
+            }
+
+            changeZoom(delta) {
+                const newZoom = Math.max(0.1, Math.min(3, this.zoom + delta));
+                if (newZoom !== this.zoom) {
+                    this.zoom = newZoom;
+                    this.updateCanvasSize();
+                    this.drawMap();
+                }
+            }
+
+            resetZoom() {
+                if (this.zoom !== 1) {
+                    this.zoom = 1;
+                    this.updateCanvasSize();
+                    this.drawMap();
+                }
+            }
+
+            // 鼠标拖拽相关函数
+            handleMouseDown(event) {
+                // 只有右键可以拖拽
+                if (event.button === 2) { // 右键
+                    this.isDragging = true;
+                    this.dragStartX = event.clientX;
+                    this.dragStartY = event.clientY;
+                    this.canvas.style.cursor = 'grabbing';
+                    event.preventDefault();
+                }
+            }
+
+            handleMouseMove(event) {
+                // 处理拖拽
+                if (this.isDragging) {
+                    const deltaX = event.clientX - this.dragStartX;
+                    const deltaY = event.clientY - this.dragStartY;
+
+                    // 应用缩放的逆变换来保持拖拽的正确距离
+                    this.mapOffsetX += deltaX;
+                    this.mapOffsetY -= deltaY;
+
+                    this.dragStartX = event.clientX;
+                    this.dragStartY = event.clientY;
+
+                    this.drawMap();
+                    event.preventDefault();
+                }
+
+                // 处理悬停效果（如果不是拖拽状态）
+                if (!this.isDragging) {
+                    this.handleCanvasHover(event);
+                }
+            }
+
+            handleMouseUp(event) {
+                if (this.isDragging) {
+                    this.isDragging = false;
+                    this.canvas.style.cursor = 'crosshair';
+                }
+            }
+
+            printData() {
+                if (this.cells.length === 0) {
+                    alert('请先生成地图！');
+                    return;
+                }
+
+                let content = '';
+
+                // 每行一个格子数据，格式为：格子编号:左下角X;左下角Y|左上角X;左上角Y|右上角X;右上角Y|右下角X;右下角Y
+                this.cells.forEach(cell => {
+                    const coords = cell.originalCoordinates.map(coord => {
+                        return `${Math.round(coord[0])};${Math.round(coord[1])}`;
+                    }).join('|');
+
+                    content += `${cell.id}:${coords}\n`;
+                });
+
+                // 创建下载链接
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `map_data_angle${this.mapAngle}_${Date.now()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new MapTools();
+        });
+    </script>
+</body>
+</html>

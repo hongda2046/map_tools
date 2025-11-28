@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(start index.html)",
+      "Bash(node:*)",
+      "Bash(start:*)",
+      "Bash(dir:*)",
+      "Bash(del:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
