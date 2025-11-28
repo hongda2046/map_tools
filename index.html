@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地图格子生成工具</title>
     <style>
+        :root{
+            --old-control-width: 320px;
+            --new-control-width: calc(var(--old-control-width) * 0.8); /* 80% of previous */
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -21,13 +26,14 @@
             padding: 20px;
         }
 
+        /* 三列布局：左、 中、 右 */
         .container {
-            display: flex;
+            display: grid;
+            grid-template-columns: var(--new-control-width) var(--new-control-width) 1fr;
             gap: 20px;
             max-width: 1400px;
             width: 100%;
-            flex-wrap: wrap;
-            align-items: flex-start;
+            align-items: start;
         }
 
         .controls {
@@ -35,15 +41,23 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 320px;
+            width: 100%;
             max-width: 100%;
-            flex-shrink: 0;
-            flex-basis: 320px;
         }
 
-        .controls h1 {
+        .layer-panel {
+            /* 第二列容器 */
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .controls h1, .layer-panel h1 {
             font-size: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             color: #333;
             text-align: center;
         }
@@ -124,6 +138,7 @@
             padding: 15px;
             border-radius: 4px;
             border: 1px solid #e9ecef;
+            margin-bottom: 12px;
         }
 
         .info-panel h3 {
@@ -159,8 +174,43 @@
             border-color: #007bff;
         }
 
+        .layer-controls {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 4px;
+        }
+
+        .layer-controls label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 13px;
+        }
+
+        #layerSelect {
+            width: 100%;
+            height: 240px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+
+        #highlightBtn {
+            background-color: #20c997;
+            color: white;
+            margin-right: 8px;
+        }
+
+        #clearHighlightBtn {
+            background-color: #6c757d;
+            color: white;
+        }
+
         .canvas-container {
-            flex: 1 1 600px;
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -168,7 +218,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden; /* 默认不出现滚动条 */
+            overflow: hidden;
             min-width: 0;
         }
 
@@ -180,17 +230,18 @@
             height: auto;
         }
 
-        @media (max-width: 768px) {
+        /* responsive: single column on narrow screens */
+        @media (max-width: 900px) {
             .container {
-                flex-direction: column;
+                grid-template-columns: 1fr;
             }
 
-            .controls {
-                width: 100%;
+            #layerSelect {
+                height: 140px;
             }
 
             .canvas-container {
-                min-height: 400px;
+                min-height: 360px;
             }
         }
 
@@ -207,17 +258,18 @@
 </head>
 <body>
     <div class="container">
+        <!-- 第1列：参数 + 按钮 -->
         <div class="controls">
             <h1>地图格子生成工具</h1>
             <div class="input-group">
                 <label for="mapWidth">地图宽度 (像素):</label>
                 <input type="number" id="mapWidth" value="1199" min="100" max="2000">
-                <small class="input-hint">范围: 100-2000像素</small>
+                <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
             </div>
             <div class="input-group">
                 <label for="mapHeight">地图高度 (像素):</label>
                 <input type="number" id="mapHeight" value="1199" min="100" max="2000">
-                <small class="input-hint">范围: 100-2000像素</small>
+                <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
             </div>
             <div class="input-group">
                 <label for="cellSize">格子边长 (像素):</label>
@@ -230,15 +282,33 @@
                 <button id="zoomOutBtn">缩小</button>
                 <button id="printBtn">打印数据</button>
             </div>
+
             <div class="info-panel">
                 <h3>格子信息</h3>
                 <p id="cellInfo">点击格子查看详细信息</p>
             </div>
         </div>
+
+        <!-- 第2列：圈层列表（多选） -->
+        <div class="layer-panel">
+            <h1>圈层操作</h1>
+            <div class="layer-controls">
+                <label for="layerSelect">圈层列表（多选）</label>
+                <select id="layerSelect" multiple></select>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button id="highlightBtn">高亮选择</button>
+                    <button id="clearHighlightBtn">清除高亮</button>
+                </div>
+                <small style="display:block;margin-top:8px;color:#666;">选择圈层后点击“高亮选择圈层”，符合圈层的格子将填充绿色。</small>
+            </div>
+        </div>
+
+        <!-- 第3列：画布 -->
         <div class="canvas-container">
             <canvas id="mapCanvas"></canvas>
         </div>
     </div>
+
     <script>
         class MapTools {
             constructor() {
@@ -248,10 +318,20 @@
                 this.cells = [];
                 this.selectedCell = null;
                 this.zoom = 1;
-                this.mapWidth = 800;
-                this.mapHeight = 600;
+                this.mapWidth = 800;  // 用户输入，表示最大坐标（例如 1199 表示 0..1199）
+                this.mapHeight = 600; // 用户输入，表示最大坐标
                 this.cellSize = 100;
                 this.mapAngle = 0; // 0 or 45
+
+                // 实际像素宽高（因为坐标从0开始，长度 = maxCoord + 1）
+                this.actualMapWidth = this.mapWidth + 1;
+                this.actualMapHeight = this.mapHeight + 1;
+
+                // 当前支持的圈层数（整数）
+                this.maxLayers = 0;
+
+                // 被选中高亮的圈层集合，存储为零基索引（layer 变量）
+                this.highlightedLayers = new Set();
 
                 // devicePixelRatio 支持
                 this.dpr = window.devicePixelRatio || 1;
@@ -282,6 +362,14 @@
 
                 document.getElementById('printBtn').addEventListener('click', () => {
                     this.printData();
+                });
+
+                document.getElementById('highlightBtn').addEventListener('click', () => {
+                    this.applyLayerHighlight();
+                });
+
+                document.getElementById('clearHighlightBtn').addEventListener('click', () => {
+                    this.clearLayerHighlight();
                 });
 
                 // preset buttons if exist
@@ -322,16 +410,20 @@
             }
 
             generateMap() {
-                // read inputs
+                // read inputs (用户输入表示最大坐标值)
                 this.mapWidth = parseInt(document.getElementById('mapWidth').value) || this.mapWidth;
                 this.mapHeight = parseInt(document.getElementById('mapHeight').value) || this.mapHeight;
                 this.cellSize = parseInt(document.getElementById('cellSize').value) || this.cellSize;
 
-                // validate
+                // 更新实际像素长度（坐标从0开始 => 长度 = 最大坐标 + 1）
+                this.actualMapWidth = this.mapWidth + 1;
+                this.actualMapHeight = this.mapHeight + 1;
+
+                // validate ranges (基于用户输入的最大坐标)
                 if (this.mapWidth < 100 || this.mapWidth > 2000 ||
                     this.mapHeight < 100 || this.mapHeight > 2000 ||
                     this.cellSize < 10 || this.cellSize > 200) {
-                    alert('请输入有效的参数范围：\n地图边长: 100-2000像素\n格子边长: 10-200像素');
+                    alert('请输入有效的参数范围：\n地图边长(最大坐标): 100-2000 像素\n格子边长: 10-200像素');
                     return;
                 }
 
@@ -340,10 +432,31 @@
                     return;
                 }
 
-                this.cols = Math.ceil(this.mapWidth / this.cellSize);
-                this.rows = Math.ceil(this.mapHeight / this.cellSize);
+                // 新增校验：实际像素长度 (maxCoord + 1) 必须能被格子边长整除，否则停止生成并提示
+                const msgs = [];
+                if (this.actualMapWidth % this.cellSize !== 0) {
+                    msgs.push(`(宽) 实际像素长度 ${this.actualMapWidth} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapWidth % this.cellSize}`);
+                }
+                if (this.actualMapHeight % this.cellSize !== 0) {
+                    msgs.push(`(高) 实际像素长度 ${this.actualMapHeight} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapHeight % this.cellSize}`);
+                }
+                if (msgs.length) {
+                    alert(msgs.join('\n') + '\n请调整参数 (注意：输入为最大坐标，实际像素长度 = 最大坐标 + 1)。');
+                    return;
+                }
 
+                // 计算行列（使用实际像素长度 / 格子尺寸）
+                this.cols = this.actualMapWidth / this.cellSize;
+                this.rows = this.actualMapHeight / this.cellSize;
+
+                // 生成格子（螺旋）
                 this.generateCellsSpiral();
+
+                // 计算圈层数（最大圈层）
+                this.maxLayers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+
+                // 初始化层列表选择框
+                this.updateLayerSelect();
 
                 // Fit by available viewport height so map shows fully without vertical scroll
                 const viewportHeight = window.innerHeight;
@@ -351,9 +464,13 @@
                 // available height below the top of the canvas container (leave small margin)
                 const availableHeight = Math.max(100, viewportHeight - containerRect.top - 20);
 
-                // fitZoom based on mapHeight
-                const fitZoom = availableHeight / this.mapHeight;
+                // fitZoom based on实际像素高度
+                const fitZoom = availableHeight / this.actualMapHeight;
                 this.zoom = Math.min(1, fitZoom);
+
+                // reset highlighted layers when regenerate
+                this.highlightedLayers.clear();
+                this.updateLayerSelectSelection();
 
                 this.updateCanvasSize();
                 this.drawMap();
@@ -387,9 +504,12 @@
                     [col * this.cellSize + cellSizeMinusOne, row * this.cellSize]
                 ];
 
+                // 计算该格子的圈层（从0开始）
+                const layer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+
                 if (this.mapAngle === 0) {
                     this.cells.push({
-                        id, row, col,
+                        id, row, col, layer,
                         x: col * this.cellSize,
                         y: row * this.cellSize,
                         coordinates: originalCoordinates,
@@ -409,7 +529,7 @@
                 });
 
                 this.cells.push({
-                    id, row, col,
+                    id, row, col, layer,
                     x: col * this.cellSize,
                     y: row * this.cellSize,
                     coordinates,
@@ -419,8 +539,8 @@
 
             updateCanvasSize() {
                 if (this.mapAngle === 0) {
-                    const cssWidth = this.mapWidth * this.zoom;
-                    const cssHeight = this.mapHeight * this.zoom;
+                    const cssWidth = this.actualMapWidth * this.zoom;
+                    const cssHeight = this.actualMapHeight * this.zoom;
                     this.canvas.width = Math.round(cssWidth * this.dpr);
                     this.canvas.height = Math.round(cssHeight * this.dpr);
                     this.canvas.style.width = cssWidth + 'px';
@@ -434,9 +554,9 @@
 
                     const corners = [
                         [0, 0],
-                        [0, this.mapHeight],
-                        [this.mapWidth, this.mapHeight],
-                        [this.mapWidth, 0]
+                        [0, this.actualMapHeight],
+                        [this.actualMapWidth, this.actualMapHeight],
+                        [this.actualMapWidth, 0]
                     ];
 
                     const transformed = corners.map(([x, y]) => {
@@ -480,8 +600,8 @@
                 this.ctx.scale(this.dpr, this.dpr);
                 this.ctx.scale(this.zoom, this.zoom);
 
-                // coordinate origin: left-bottom
-                this.ctx.translate(0, this.mapHeight);
+                // coordinate origin: left-bottom (使用实际高度)
+                this.ctx.translate(0, this.actualMapHeight);
                 this.ctx.scale(1, -1);
 
                 // apply offset (CSS px units converted by dividing by zoom)
@@ -501,12 +621,20 @@
             }
 
             drawCell(cell, isSelected) {
-                const { coordinates, id, row, col } = cell;
+                const { coordinates, id, row, col, layer } = cell;
 
                 // polygon style
                 this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
                 this.ctx.lineWidth = isSelected ? 2 : 1;
-                this.ctx.fillStyle = isSelected ? 'rgba(255, 0, 0, 0.2)' : ((row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff');
+
+                // determine fill: selected -> red; highlighted layer -> green; otherwise checker
+                if (isSelected) {
+                    this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
+                    this.ctx.fillStyle = 'rgba(0, 128, 0, 0.25)';
+                } else {
+                    this.ctx.fillStyle = ((row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff');
+                }
 
                 // draw polygon (coordinates are in map units)
                 this.ctx.beginPath();
@@ -573,12 +701,12 @@
                 // X axis
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, 0);
-                this.ctx.lineTo(this.mapWidth, 0);
+                this.ctx.lineTo(this.actualMapWidth, 0);
                 this.ctx.stroke();
                 // Y axis
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, 0);
-                this.ctx.lineTo(0, this.mapHeight);
+                this.ctx.lineTo(0, this.actualMapHeight);
                 this.ctx.stroke();
 
                 const fontSize = Math.max(10, Math.min(16, 14 * Math.sqrt(this.zoom)));
@@ -589,8 +717,8 @@
                 this.ctx.textAlign = 'left';
                 this.ctx.textBaseline = 'middle';
                 this.ctx.fillText('0,0', 10, -10);
-                this.ctx.fillText('X', this.mapWidth - 15, -10);
-                this.ctx.fillText('Y', 10, -(this.mapHeight - 10));
+                this.ctx.fillText('X', this.actualMapWidth - 15, -10);
+                this.ctx.fillText('Y', 10, -(this.actualMapHeight - 10));
                 this.ctx.restore();
             }
 
@@ -615,7 +743,8 @@
                 // reverse applied offsets and flips
                 x -= this.mapOffsetX / this.zoom;
                 y -= this.mapOffsetY / this.zoom;
-                y = this.mapHeight - y;
+                // 使用实际高度进行反转
+                y = this.actualMapHeight - y;
                 if (this.mapAngle !== 0) {
                     const angleRad = -this.mapAngle * Math.PI / 180;
                     const cosA = Math.cos(angleRad);
@@ -656,20 +785,20 @@
             }
 
             updateCellInfo(cell) {
-                const { id, row, col, originalCoordinates } = cell;
+                const { id, row, col, originalCoordinates, layer } = cell;
                 const coordText = originalCoordinates.map((coord, index) => {
                     const labels = ['左下角', '左上角', '右上角', '右下角'];
                     const rounded = [Math.round(coord[0]), Math.round(coord[1])];
                     return `${labels[index]}: (${rounded[0]}, ${rounded[1]})`;
                 }).join('<br>');
 
-                const layer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+                const layerDisplay = layer + 1;
                 const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
 
                 document.getElementById('cellInfo').innerHTML = `
                     <strong>格子 #${id}</strong><br>
                     位置: 第${row + 1}行, 第${col + 1}列<br>
-                    圈层: 第${layer + 1}圈${angleInfo}<br>
+                    圈层: 第${layerDisplay}圈${angleInfo}<br>
                     <strong>坐标点:</strong><br>
                     ${coordText}
                 `;
@@ -722,6 +851,47 @@
                 if (this.isDragging) {
                     this.isDragging = false;
                     this.canvas.style.cursor = 'crosshair';
+                }
+            }
+
+            // 填充圈层选择框
+            updateLayerSelect() {
+                const select = document.getElementById('layerSelect');
+                select.innerHTML = '';
+                const layers = this.maxLayers || Math.ceil(Math.min(this.rows || 0, this.cols || 0) / 2);
+                for (let i = 0; i < layers; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(i); // 存储为零基索引
+                    opt.text = `第 ${i + 1} 圈`;
+                    select.appendChild(opt);
+                }
+            }
+
+            // 更新选择框的选中状态（用于生成地图后重置）
+            updateLayerSelectSelection() {
+                const select = document.getElementById('layerSelect');
+                for (const opt of select.options) {
+                    opt.selected = false;
+                }
+            }
+
+            // 应用高亮：读取选择框的值并设置 highlightedLayers，然后重绘
+            applyLayerHighlight() {
+                const select = document.getElementById('layerSelect');
+                const selected = Array.from(select.selectedOptions).map(o => parseInt(o.value, 10));
+                if (!selected || selected.length === 0) {
+                    alert('请先选择至少一个圈层再点击高亮。');
+                    return;
+                }
+                this.highlightedLayers = new Set(selected);
+                this.drawMap();
+            }
+
+            clearLayerHighlight() {
+                if (this.highlightedLayers && this.highlightedLayers.size > 0) {
+                    this.highlightedLayers.clear();
+                    this.updateLayerSelectSelection();
+                    this.drawMap();
                 }
             }
 
