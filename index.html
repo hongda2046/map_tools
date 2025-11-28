@@ -1261,22 +1261,46 @@
 
             exportSeparatedData() {
                 // export monsters first then empty line then resources
-                const monsters = [];
-                const resources = [];
+                // 汇总相同格子的数据：cellId -> {type1: [items], type2: [items]}
+                const cellDataMap = new Map();
+
                 for (const c of this.cells) {
                     if (!c.resources || c.resources.length === 0) continue;
+
+                    if (!cellDataMap.has(c.id)) {
+                        cellDataMap.set(c.id, { monsters: [], resources: [] });
+                    }
+
+                    const cellData = cellDataMap.get(c.id);
                     for (const r of c.resources) {
                         if (r.type === 1) {
-                            monsters.push({ cellId: c.id, id: r.id, qty: r.qty });
+                            cellData.monsters.push({ id: r.id, qty: r.qty });
                         } else if (r.type === 2) {
-                            resources.push({ cellId: c.id, id: r.id, qty: r.qty });
+                            cellData.resources.push({ id: r.id, qty: r.qty });
                         }
                     }
                 }
+
                 const lines = [];
-                for (const m of monsters) lines.push(`cell:${m.cellId}, id:${m.id}, qty:${m.qty}`);
+
+                // 导出怪物数据
+                for (const [cellId, data] of cellDataMap) {
+                    if (data.monsters.length > 0) {
+                        const monsterParts = data.monsters.map(m => `${m.id};${m.qty}`);
+                        lines.push(`${cellId}:${monsterParts.join('|')}`);
+                    }
+                }
+
+                // 空行分隔
                 lines.push('');
-                for (const r of resources) lines.push(`cell:${r.cellId}, id:${r.id}, qty:${r.qty}`);
+
+                // 导出资源数据
+                for (const [cellId, data] of cellDataMap) {
+                    if (data.resources.length > 0) {
+                        const resourceParts = data.resources.map(r => `${r.id};${r.qty}`);
+                        lines.push(`${cellId}:${resourceParts.join('|')}`);
+                    }
+                }
 
                 const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
