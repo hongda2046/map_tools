@@ -190,12 +190,23 @@
 
         #layerSelect {
             width: 100%;
-            height: 240px;
+            height: 120px;
             padding: 6px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 13px;
             margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+
+        #monsterSelect, #resourceSelect {
+            width: 100%;
+            height: 130px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 6px;
             box-sizing: border-box;
         }
 
@@ -208,6 +219,24 @@
         #clearHighlightBtn {
             background-color: #6c757d;
             color: white;
+        }
+
+        #applyMonsterBtn {
+            background-color: #e67e22;
+            color: white;
+            margin-top: 6px;
+        }
+
+        #applyResourceBtn {
+            background-color: #17a2b8;
+            color: white;
+            margin-top: 6px;
+        }
+
+        #exportResourceBtn {
+            background-color: #6f42c1;
+            color: white;
+            margin-top: 6px;
         }
 
         .canvas-container {
@@ -289,7 +318,7 @@
             </div>
         </div>
 
-        <!-- 第2列：圈层列表（多选） -->
+        <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
         <div class="layer-panel">
             <h1>圈层操作</h1>
             <div class="layer-controls">
@@ -299,7 +328,33 @@
                     <button id="highlightBtn">高亮选择</button>
                     <button id="clearHighlightBtn">清除高亮</button>
                 </div>
-                <small style="display:block;margin-top:8px;color:#666;">选择圈层后点击“高亮选择圈层”，符合圈层的格子将填充绿色。</small>
+                <hr style="margin:12px 0;">
+
+                <label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，多选）</label>
+                <select id="monsterSelect" multiple></select>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <label style="font-size:13px;color:#333;">每怪物数量：</label>
+                    <input id="monsterQuantity" type="number" value="1" min="1" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button id="applyMonsterBtn">添加怪物到选择圈层</button>
+                </div>
+
+                <hr style="margin:12px 0;">
+
+                <label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，多选）</label>
+                <select id="resourceSelect" multiple></select>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <label style="font-size:13px;color:#333;">每资源数量：</label>
+                    <input id="resourceQuantity" type="number" value="1" min="1" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                </div>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button id="applyResourceBtn">添加资源到选择圈层</button>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
+                </div>
             </div>
         </div>
 
@@ -308,6 +363,9 @@
             <canvas id="mapCanvas"></canvas>
         </div>
     </div>
+
+    <!-- 先引入资源数据脚本（同步定义全局 MAP_RESOURCES），避免 fetch -->
+    <script src="map-resources.js"></script>
 
     <script>
         class MapTools {
@@ -343,7 +401,13 @@
                 this.mapOffsetX = 0; // CSS 像素
                 this.mapOffsetY = 0;
 
+                // 资源相关
+                this.allItems = []; // 原始数组含 type
+                this.monsters = []; // type=1
+                this.resources = []; // type=2
+
                 this.initEventListeners();
+                this.loadResourcesFromGlobal();
                 this.generateMap();
             }
 
@@ -372,15 +436,16 @@
                     this.clearLayerHighlight();
                 });
 
-                // preset buttons if exist
-                document.querySelectorAll('.preset-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const angle = parseInt(e.target.dataset.angle);
-                        this.mapAngle = angle;
-                        this.updatePresetButtons();
-                        this.updateCanvasSize();
-                        this.drawMap();
-                    });
+                document.getElementById('applyMonsterBtn').addEventListener('click', () => {
+                    this.applyItemsToSelectedLayers(1);
+                });
+
+                document.getElementById('applyResourceBtn').addEventListener('click', () => {
+                    this.applyItemsToSelectedLayers(2);
+                });
+
+                document.getElementById('exportResourceBtn').addEventListener('click', () => {
+                    this.exportSeparatedData();
                 });
 
                 // unified event to map coordinate
@@ -402,11 +467,42 @@
                 });
             }
 
-            updatePresetButtons() {
-                document.querySelectorAll('.preset-btn').forEach(btn => {
-                    const angle = parseInt(btn.dataset.angle);
-                    if (angle === this.mapAngle) btn.classList.add('active'); else btn.classList.remove('active');
-                });
+            loadResourcesFromGlobal() {
+                // 读取全局 MAP_RESOURCES（由 map-resources.js 提供）
+                if (window.MAP_RESOURCES && Array.isArray(window.MAP_RESOURCES)) {
+                    this.allItems = window.MAP_RESOURCES.map(i => ({ id: i.id, name: i.name, type: i.type }));
+                } else {
+                    this.allItems = [];
+                    console.warn('MAP_RESOURCES 未定义或格式不对，资源/怪物列表为空。');
+                }
+
+                this.monsters = this.allItems.filter(i => Number(i.type) === 1);
+                this.resources = this.allItems.filter(i => Number(i.type) === 2);
+
+                this.updateMonsterList();
+                this.updateResourceList();
+            }
+
+            updateMonsterList() {
+                const sel = document.getElementById('monsterSelect');
+                sel.innerHTML = '';
+                for (const r of this.monsters) {
+                    const opt = document.createElement('option');
+                    opt.value = String(r.id);
+                    opt.text = `${r.name} (${r.id})`;
+                    sel.appendChild(opt);
+                }
+            }
+
+            updateResourceList() {
+                const sel = document.getElementById('resourceSelect');
+                sel.innerHTML = '';
+                for (const r of this.resources) {
+                    const opt = document.createElement('option');
+                    opt.value = String(r.id);
+                    opt.text = `${r.name} (${r.id})`;
+                    sel.appendChild(opt);
+                }
             }
 
             generateMap() {
@@ -451,6 +547,11 @@
 
                 // 生成格子（螺旋）
                 this.generateCellsSpiral();
+
+                // 初始化 cell.resources（每次生成都会清空之前的资源分配）
+                for (const c of this.cells) {
+                    c.resources = []; // 每项为 { type, id, qty }
+                }
 
                 // 计算圈层数（最大圈层）
                 this.maxLayers = Math.ceil(Math.min(this.rows, this.cols) / 2);
@@ -513,7 +614,8 @@
                         x: col * this.cellSize,
                         y: row * this.cellSize,
                         coordinates: originalCoordinates,
-                        originalCoordinates
+                        originalCoordinates,
+                        resources: []
                     });
                     return;
                 }
@@ -533,7 +635,8 @@
                     x: col * this.cellSize,
                     y: row * this.cellSize,
                     coordinates,
-                    originalCoordinates
+                    originalCoordinates,
+                    resources: []
                 });
             }
 
@@ -692,6 +795,18 @@
                 const centerY = (minY + maxY) / 2;
                 this.ctx.fillText(text, centerX, -centerY);
 
+                // 如果该格有资源或怪物，在格子中心下方显示简短标识 (显示已分配项数)
+                if (cell.resources && cell.resources.length > 0) {
+                    const resText = cell.resources.length > 1 ? `${cell.resources.length}A` : `${cell.resources[0].id}`;
+                    // 使用较小字号显示
+                    this.ctx.font = `${Math.max(8, Math.round(fontSize * 0.45))}px Arial`;
+                    this.ctx.fillStyle = '#b00000';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'top';
+                    // 在 id 的下方画
+                    this.ctx.fillText(resText, centerX, -centerY + Math.max(8, fontSize * 0.6));
+                }
+
                 this.ctx.restore();
             }
 
@@ -795,12 +910,20 @@
                 const layerDisplay = layer + 1;
                 const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
 
+                // 资源显示
+                let resHtml = '';
+                if (cell.resources && cell.resources.length > 0) {
+                    const items = cell.resources.map(r => `类型${r.type}:${r.id};${r.qty}`);
+                    resHtml = `<br><strong>已分配项:</strong> ${items.join(' | ')}`;
+                }
+
                 document.getElementById('cellInfo').innerHTML = `
                     <strong>格子 #${id}</strong><br>
                     位置: 第${row + 1}行, 第${col + 1}列<br>
                     圈层: 第${layerDisplay}圈${angleInfo}<br>
                     <strong>坐标点:</strong><br>
                     ${coordText}
+                    ${resHtml}
                 `;
             }
 
@@ -893,6 +1016,102 @@
                     this.updateLayerSelectSelection();
                     this.drawMap();
                 }
+            }
+
+            // 通用：根据类型（1=怪物,2=资源）把所选项添加到选择的圈层
+            applyItemsToSelectedLayers(type) {
+                const layerSelect = document.getElementById('layerSelect');
+                const selLayers = Array.from(layerSelect.selectedOptions).map(o => parseInt(o.value, 10));
+                if (!selLayers || selLayers.length === 0) {
+                    alert('请先选择至少一个圈层。');
+                    return;
+                }
+
+                let selIds = [];
+                let qty = 1;
+                if (type === 1) {
+                    const sel = document.getElementById('monsterSelect');
+                    selIds = Array.from(sel.selectedOptions).map(o => parseInt(o.value, 10));
+                    qty = Math.max(1, parseInt(document.getElementById('monsterQuantity').value) || 1);
+                } else {
+                    const sel = document.getElementById('resourceSelect');
+                    selIds = Array.from(sel.selectedOptions).map(o => parseInt(o.value, 10));
+                    qty = Math.max(1, parseInt(document.getElementById('resourceQuantity').value) || 1);
+                }
+
+                if (!selIds || selIds.length === 0) {
+                    alert('请先从对应列表中选择至少一个项。');
+                    return;
+                }
+
+                let appliedCount = 0;
+                for (const cell of this.cells) {
+                    if (selLayers.includes(cell.layer)) {
+                        for (const id of selIds) {
+                            const exist = cell.resources.find(r => Number(r.id) === Number(id) && Number(r.type) === Number(type));
+                            if (exist) {
+                                exist.qty = Number(exist.qty) + qty;
+                            } else {
+                                cell.resources.push({ type: Number(type), id: Number(id), qty: Number(qty) });
+                            }
+                        }
+                        appliedCount++;
+                    }
+                }
+                this.drawMap();
+                const typeName = type === 1 ? '怪物' : '资源';
+                alert(`已将 ${selIds.length} 个${typeName} 分配到 ${appliedCount} 个格子（圈层）。`);
+            }
+
+            // 导出：怪物与资源分开导出，格式：格子ID: id;qty|id;qty
+            // 顺序：怪物数据（若存在） -> 空一行 -> 资源数据（若存在）
+            exportSeparatedData() {
+                if (this.cells.length === 0) {
+                    alert('请先生成地图！');
+                    return;
+                }
+
+                const monsterLines = [];
+                const resourceLines = [];
+
+                for (const cell of this.cells) {
+                    if (!cell.resources || cell.resources.length === 0) continue;
+
+                    // 收集此格的怪物（type=1）
+                    const monsters = cell.resources.filter(r => Number(r.type) === 1);
+                    if (monsters.length > 0) {
+                        const parts = monsters.map(m => `${m.id};${m.qty}`).join('|');
+                        monsterLines.push(`${cell.id}:${parts}`);
+                    }
+
+                    // 收集此格的资源（type=2）
+                    const resources = cell.resources.filter(r => Number(r.type) === 2);
+                    if (resources.length > 0) {
+                        const parts = resources.map(r => `${r.id};${r.qty}`).join('|');
+                        resourceLines.push(`${cell.id}:${parts}`);
+                    }
+                }
+
+                if (monsterLines.length === 0 && resourceLines.length === 0) {
+                    alert('没有任何已分配的怪物或资源可导出。');
+                    return;
+                }
+
+                // 组装内容：怪物部分（可为空），空行，资源部分（可为空）
+                // 如果某一部分为空，则该部分留空行或直接只有空行间隔
+                const top = monsterLines.length > 0 ? monsterLines.join('\n') : '';
+                const bottom = resourceLines.length > 0 ? resourceLines.join('\n') : '';
+                const content = top + '\n\n' + bottom;
+
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `map_export_monsters_and_resources_${Date.now()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
 
             printData() {
