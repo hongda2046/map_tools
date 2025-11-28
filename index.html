@@ -900,32 +900,45 @@
             }
 
             updateCellInfo(cell) {
-                const { id, row, col, originalCoordinates, layer } = cell;
-                const coordText = originalCoordinates.map((coord, index) => {
-                    const labels = ['左下角', '左上角', '右上角', '右下角'];
-                    const rounded = [Math.round(coord[0]), Math.round(coord[1])];
-                    return `${labels[index]}: (${rounded[0]}, ${rounded[1]})`;
-                }).join('<br>');
+				const { id, row, col, originalCoordinates, layer } = cell;
+				const coordText = originalCoordinates.map((coord, index) => {
+					const labels = ['左下角', '左上角', '右上角', '右下角'];
+					const rounded = [Math.round(coord[0]), Math.round(coord[1])];
+					return `${labels[index]}: (${rounded[0]}, ${rounded[1]})`;
+				}).join('<br>');
 
-                const layerDisplay = layer + 1;
-                const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
+				const layerDisplay = layer + 1;
+				const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
 
-                // 资源显示
-                let resHtml = '';
-                if (cell.resources && cell.resources.length > 0) {
-                    const items = cell.resources.map(r => `类型${r.type}:${r.id};${r.qty}`);
-                    resHtml = `<br><strong>已分配项:</strong> ${items.join(' | ')}`;
-                }
+				// 资源显示 —— 显示为 "name: 数量"，每条单独一行，合并相同 id 的数量
+				let resHtml = '';
+				if (cell.resources && cell.resources.length > 0) {
+					// 合并相同 id 的数量
+					const counts = {};
+					for (const r of cell.resources) {
+						const idStr = String(r.id);
+						const qty = (r.qty != null) ? Number(r.qty) : ((r.quantity != null) ? Number(r.quantity) : 1);
+						counts[idStr] = (counts[idStr] || 0) + (isNaN(qty) ? 1 : qty);
+					}
 
-                document.getElementById('cellInfo').innerHTML = `
-                    <strong>格子 #${id}</strong><br>
-                    位置: 第${row + 1}行, 第${col + 1}列<br>
-                    圈层: 第${layerDisplay}圈${angleInfo}<br>
-                    <strong>坐标点:</strong><br>
-                    ${coordText}
-                    ${resHtml}
-                `;
-            }
+					const items = Object.entries(counts).map(([itemId, totalQty]) => {
+						const found = (this.allItems || []).find(a => String(a.id) === String(itemId));
+						const name = found ? found.name : itemId;
+						return `${name}: ${totalQty}`;
+					});
+
+					resHtml = `<br><strong>已分配项:</strong><br>${items.join('<br>')}`;
+				}
+
+				document.getElementById('cellInfo').innerHTML = `
+					<strong>格子 #${id}</strong><br>
+					位置: 第${row + 1}行, 第${col + 1}列<br>
+					圈层: 第${layerDisplay}圈${angleInfo}<br>
+					<strong>坐标点:</strong><br>
+					${coordText}
+					${resHtml}
+				`;
+			}
 
             changeZoom(delta) {
                 const newZoom = Math.max(0.1, Math.min(3, this.zoom + delta));
@@ -1059,8 +1072,8 @@
                     }
                 }
                 this.drawMap();
-                const typeName = type === 1 ? '怪物' : '资源';
-                alert(`已将 ${selIds.length} 个${typeName} 分配到 ${appliedCount} 个格子（圈层）。`);
+                //const typeName = type === 1 ? '怪物' : '资源';
+                //alert(`已将 ${selIds.length} 个${typeName} 分配到 ${appliedCount} 个格子（圈层）。`);
             }
 
             // 导出：怪物与资源分开导出，格式：格子ID: id;qty|id;qty
