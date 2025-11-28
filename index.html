@@ -226,9 +226,21 @@
             color: white;
             margin-top: 6px;
         }
+		
+		#applyMonsterToCellBtn {
+            background-color: #8B814C;
+            color: white;
+            margin-top: 6px;
+        }
 
         #applyResourceBtn {
             background-color: #17a2b8;
+            color: white;
+            margin-top: 6px;
+        }
+		
+		#applyResourceToCellBtn {
+            background-color: #8B814C;
             color: white;
             margin-top: 6px;
         }
@@ -318,45 +330,48 @@
         </div>
 
         <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
-        <div class="layer-panel">
-            <div class="layer-controls">
-                <label for="layerSelect">圈层列表（多选）</label>
-                <select id="layerSelect" multiple></select>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button id="highlightBtn">高亮选择</button>
-                    <button id="clearHighlightBtn">清除高亮</button>
-                </div>
-                <hr style="margin:12px 0;">
+		<div class="layer-panel">
+			<div class="layer-controls">
+				<label for="layerSelect">圈层列表（多选）</label>
+				<select id="layerSelect" multiple></select>
+				<div style="display:flex; gap:8px; margin-top:8px;">
+					<button id="highlightBtn">高亮选择</button>
+					<button id="clearHighlightBtn">清除高亮</button>
+				</div>
+				<hr style="margin:12px 0;">
 
-                <label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，可多选）</label>
-                <select id="monsterSelect" multiple></select>
-                <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
-                    <label style="font-size:13px;color:#333;">怪物数量：</label>
-                    <input id="monsterQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
-                    <button id="setMonsterQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
-                </div>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button id="applyMonsterBtn">添加怪物到选择圈层</button>
-                </div>
+				<label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，可多选）</label>
+				<select id="monsterSelect" multiple></select>
+				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+					<label style="font-size:13px;color:#333;">怪物数量：</label>
+					<input id="monsterQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+					<button id="setMonsterQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
+				</div>
+				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+					<button id="applyMonsterBtn">怪物到圈层</button>
+					<button id="applyMonsterToCellBtn">怪物到格子</button>
+				</div>
 
-                <hr style="margin:12px 0;">
+				<hr style="margin:12px 0;">
 
-                <label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，可多选）</label>
-                <select id="resourceSelect" multiple></select>
-                <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
-                    <label style="font-size:13px;color:#333;">资源数量：</label>
-                    <input id="resourceQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
-                    <button id="setResourceQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
-                </div>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button id="applyResourceBtn">添加资源到选择圈层</button>
-                </div>
-                <hr style="margin:10px 0;">
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
-                </div>
-            </div>
-        </div>
+				<label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，可多选）</label>
+				<select id="resourceSelect" multiple></select>
+				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+					<label style="font-size:13px;color:#333;">资源数量：</label>
+					<input id="resourceQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+					<button id="setResourceQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
+				</div>
+				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+					<button id="applyResourceBtn">资源到圈层</button>
+					<!-- 新增：直接添加到当前选中格子的按钮 -->
+					<button id="applyResourceToCellBtn">资源到格子</button>
+				</div>
+				<hr style="margin:10px 0;">
+				<div style="display:flex; gap:8px; margin-top:10px;">
+					<button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
+				</div>
+			</div>
+		</div>
 
         <!-- 第3列：画布 -->
         <div class="canvas-container">
@@ -443,7 +458,23 @@
                 document.getElementById('applyResourceBtn').addEventListener('click', () => {
                     this.applyItemsToSelectedLayers(2);
                 });
+				
+				// 新增：直接将选中的怪物添加到当前选中的格子
+				const applyMonsterToCellBtn = document.getElementById('applyMonsterToCellBtn');
+				if (applyMonsterToCellBtn) {
+					applyMonsterToCellBtn.addEventListener('click', () => {
+						this.applyItemsToSelectedCell(1);
+					});
+				}
 
+				// 新增：直接将选中的资源添加到当前选中的格子
+				const applyResourceToCellBtn = document.getElementById('applyResourceToCellBtn');
+				if (applyResourceToCellBtn) {
+					applyResourceToCellBtn.addEventListener('click', () => {
+						this.applyItemsToSelectedCell(2);
+					});
+				}
+				
                 document.getElementById('exportResourceBtn').addEventListener('click', () => {
                     this.exportSeparatedData();
                 });
@@ -1126,6 +1157,46 @@
                 for (const o of Array.from(sel.options)) o.selected = false;
                 this.drawMap();
             }
+			// apply selected items (from monster/resource select) to the currently selected cell
+			applyItemsToSelectedCell(type) {
+				if (!this.selectedCell) {
+					alert('请先在画布上选择一个格子再使用此功能。');
+					return;
+				}
+				const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+				const qtyInput = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+				const selectedOpts = Array.from(select.selectedOptions || []);
+				if (selectedOpts.length === 0) {
+					alert('请先在列表中选择一个或多个项。');
+					return;
+				}
+
+				// for each selected option, get id and quantity (prefer option.dataset.qty; fallback to qtyInput)
+				for (const opt of selectedOpts) {
+					const idStr = opt.value;
+					let qty = null;
+					// prefer dataset qty (set by setItemQuantity), else use qtyInput.value, else default 1
+					if (opt.dataset && opt.dataset.qty != null && opt.dataset.qty !== '') {
+						qty = parseInt(opt.dataset.qty);
+					} else {
+						qty = parseInt(qtyInput.value);
+					}
+					if (isNaN(qty) || qty < 0) qty = 0;
+
+					// merge into selectedCell.resources:
+					// if same type+id exists, increase qty; else push new entry
+					const existing = this.selectedCell.resources.find(r => String(r.type) === String(type) && String(r.id) === String(idStr));
+					if (existing) {
+						existing.qty = (Number(existing.qty) || 0) + qty;
+					} else {
+						this.selectedCell.resources.push({ type: type, id: idStr, qty: qty });
+					}
+				}
+
+				// reflect changes visually and in info panel
+				this.updateCellInfo(this.selectedCell);
+				this.drawMap();
+			}
 
             // 将选中的怪物/资源按各自的 qty 添加到被选圈层的格子上
             applyItemsToSelectedLayers(type) {
