@@ -1,7 +1,6 @@
-contents=
 /*
 layout-toggle.js
-Adds collapse/expand (tab) behavior for the left (.controls) and middle (.layer-panel) columns
+Adds collapse/expand (tab) behavior for left (.controls) and middle (.layer-panel) columns
 without editing the large existing index.html. This script injects the necessary CSS and
 wraps each panel's existing children into a .panel-inner so we can hide/show content when collapsed.
 
@@ -94,7 +93,7 @@ collapse it into a slim tab attached to the left side of the viewport. Clicking 
     white-space: nowrap;
   }
 
-  /* left tab (for the leftmost panel) */
+  /* left tab (for leftmost panel) */
   .panel-tab.left {
     left: 6px;
   }
@@ -187,7 +186,7 @@ collapse it into a slim tab attached to the left side of the viewport. Clicking 
       setCollapsed(false);
       // focus first focusable element inside panel when expanded
       setTimeout(() => {
-        const firstFocusable = panel.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstFocusable = panel.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"]');
         if (firstFocusable) firstFocusable.focus();
         // after expanding, ensure the canvas is updated if MapTools uses size calculations on resize
         // dispatch resize event for consumers to adjust
@@ -226,6 +225,6 @@ collapse it into a slim tab attached to the left side of the viewport. Clicking 
     title: '收起中间面板'
   });
 
-  // Accessibility: allow toggling with keyboard when focusing the collapse buttons or tabs
+  // Accessibility: allow toggling with keyboard when focusing on collapse buttons or tabs
   // (handled by native button behavior)
 })();
