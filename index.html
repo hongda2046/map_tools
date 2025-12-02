@@ -344,7 +344,7 @@
 				<select id="monsterSelect" multiple></select>
 				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
 					<label style="font-size:13px;color:#333;">怪物数量：</label>
-					<input id="monsterQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+					<input id="monsterQuantity" type="number" value="1" placeholder="正数添加，负数移除" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
 					<button id="setMonsterQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
 				</div>
 				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
@@ -358,7 +358,7 @@
 				<select id="resourceSelect" multiple></select>
 				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
 					<label style="font-size:13px;color:#333;">资源数量：</label>
-					<input id="resourceQuantity" type="number" value="1" min="0" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+					<input id="resourceQuantity" type="number" value="1" placeholder="正数添加，负数移除" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
 					<button id="setResourceQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
 				</div>
 				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
@@ -517,10 +517,10 @@
             loadResourcesFromGlobal() {
                 // 读取全局 MAP_RESOURCES（由 map-resources.js 提供）
                 if (window.MAP_RESOURCES && Array.isArray(window.MAP_RESOURCES)) {
-                    // 把数量标准化为非负整数（负数视为 0），默认 0
+                    // 保留原始数量，支持负数用于移除资源，默认 0
                     this.allItems = window.MAP_RESOURCES.map(i => {
                         const q = (i.qty != null) ? parseInt(i.qty) : 0;
-                        const safeQ = isNaN(q) ? 0 : Math.max(0, q);
+                        const safeQ = isNaN(q) ? 0 : q; // 允许负数
                         return { id: i.id, name: i.name, type: i.type, qty: safeQ };
                     });
                 } else {
@@ -541,12 +541,12 @@
                 for (const r of this.monsters) {
                     const opt = document.createElement('option');
                     opt.value = String(r.id);
-                    // 存储 qty 到 data 属性
+                    // 存储 qty 到 data 属性，保留原始值（包括负数）
                     const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
-                    const safeQty = isNaN(qtyVal) ? 0 : Math.max(0, qtyVal); // 负数显示为 0
-                    opt.dataset.qty = String(safeQty);
-                    // 在选项文本中显示数量（负值显示为 0）
-                    opt.text = `${r.name} (${r.id}) (数量:${safeQty})`;
+                    const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
+                    opt.dataset.qty = String(qty);
+                    // 在选项文本中显示数量（包括负数）
+                    opt.text = `${r.name} (${r.id}) (数量:${qty})`;
                     sel.appendChild(opt);
                 }
                 // try to sync quantity input when list refreshed
@@ -560,9 +560,9 @@
                     const opt = document.createElement('option');
                     opt.value = String(r.id);
                     const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
-                    const safeQty = isNaN(qtyVal) ? 0 : Math.max(0, qtyVal);
-                    opt.dataset.qty = String(safeQty);
-                    opt.text = `${r.name} (${r.id}) (数量:${safeQty})`;
+                    const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
+                    opt.dataset.qty = String(qty);
+                    opt.text = `${r.name} (${r.id}) (数量:${qty})`;
                     sel.appendChild(opt);
                 }
                 this.syncQuantityInputFromSelection(2);
@@ -592,17 +592,16 @@
                 }
             }
 
-            // 将输入框的数量设置到选中的列表项（支持多选批量设置，也支持单个设置）
+            // 将输入框的数量设置到选中的列表项（支持多选批量设置，也支持单个设置，支持负数）
             setItemQuantity(type) {
                 const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
                 const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
                 let val = parseInt(input.value);
                 if (isNaN(val)) {
-                    alert('请输入有效数量（整数）。');
+                    alert('请输入有效数量（整数，支持负数用于移除资源）。');
                     return;
                 }
-                // 负值视为 0
-                val = Math.max(0, val);
+                // 允许负数，用于移除资源
 
                 const selOpts = Array.from(select.selectedOptions || []);
                 if (selOpts.length === 0) {
@@ -1181,17 +1180,24 @@
 					} else {
 						qty = parseInt(qtyInput.value);
 					}
-					if (isNaN(qty) || qty < 0) qty = 0;
+					if (isNaN(qty)) qty = 0; // 允许负数，用于移除资源
 
 					// merge into selectedCell.resources:
-					// if same type+id exists, increase qty; else push new entry
+					// if same type+id exists, increase qty (negative numbers will reduce)
 					const existing = this.selectedCell.resources.find(r => String(r.type) === String(type) && String(r.id) === String(idStr));
 					if (existing) {
 						existing.qty = (Number(existing.qty) || 0) + qty;
-					} else {
+					} else if (qty > 0) {
+						// 只有正数才能创建新的资源项
 						this.selectedCell.resources.push({ type: type, id: idStr, qty: qty });
+					} else if (qty < 0) {
+						// 如果试图添加负数但资源不存在，给出提示
+						alert(`无法移除不存在的资源：${idStr}，当前格子中没有该资源。`);
 					}
 				}
+
+				// 清理数量为0或负数的资源项
+				this.selectedCell.resources = this.selectedCell.resources.filter(r => r.qty > 0);
 
 				// reflect changes visually and in info panel
 				this.updateCellInfo(this.selectedCell);
@@ -1225,13 +1231,14 @@
                     return { id: idStr, qty: qty };
                 });
 
-                // Filter out items with qty === 0 (do not add them)
-                const itemsToApply = itemsToApplyAll.filter(it => Number(it.qty) > 0);
-                const skippedZeroItems = itemsToApplyAll.length - itemsToApply.length;
+                // 支持负数：负数用于移除资源，正数用于添加资源
+                // 只跳过完全无效（NaN）的项
+                const itemsToApply = itemsToApplyAll.filter(it => !isNaN(it.qty));
+                const invalidItems = itemsToApplyAll.length - itemsToApply.length;
 
                 if (itemsToApply.length === 0) {
-                    // All selected items have qty 0 -> prevent adding and inform user
-                    alert('选中的项中所有数量均为 0，无法添加到圈层，请先将数量设为大于 0。');
+                    // All selected items have invalid quantities
+                    alert('选中的项中所有数量均无效，请输入有效的整数数量。');
                     return;
                 }
 
@@ -1242,19 +1249,42 @@
                     return;
                 }
 
-                // Add only items with qty > 0
+                // 处理每个格子的资源添加/移除
                 for (const cell of targetCells) {
                     for (const it of itemsToApply) {
-                        cell.resources.push({ type, id: it.id, qty: it.qty });
+                        // 查找是否已存在相同类型的资源
+                        const existingIndex = cell.resources.findIndex(r =>
+                            String(r.type) === String(type) && String(r.id) === String(it.id)
+                        );
+
+                        if (existingIndex >= 0) {
+                            // 如果已存在，增加数量（负数会减少）
+                            cell.resources[existingIndex].qty += it.qty;
+                        } else if (it.qty > 0) {
+                            // 如果不存在且数量为正数，则添加新资源
+                            cell.resources.push({ type, id: it.id, qty: it.qty });
+                        }
+                        // 如果数量为负数且不存在，不需要添加（负数不能用于创建新资源，只能用于移除现有资源）
                     }
+
+                    // 清理数量为0或负数的资源项
+                    cell.resources = cell.resources.filter(r => r.qty > 0);
                 }
 
                 this.drawMap();
 
-                // Provide informative alert: success + info about skipped zero-qty items
-                let msg = `添加完成：共 ${itemsToApply.length} 项已添加到 ${targetCells.length} 个格子（每项数量>0）。`;
-                if (skippedZeroItems > 0) {
-                    msg += `\n有 ${skippedZeroItems} 项因数量为 0 被跳过，未添加。`;
+                // 提供信息提示
+                const addedCount = itemsToApply.filter(it => it.qty > 0).length;
+                const removedCount = itemsToApply.filter(it => it.qty < 0).length;
+                let msg = `处理完成：共 ${itemsToApply.length} 项已应用到 ${targetCells.length} 个格子。`;
+                if (addedCount > 0) {
+                    msg += `\n其中 ${addedCount} 项为添加（正数数量）。`;
+                }
+                if (removedCount > 0) {
+                    msg += `\n其中 ${removedCount} 项为移除（负数数量）。`;
+                }
+                if (invalidItems > 0) {
+                    msg += `\n有 ${invalidItems} 项因数量无效被跳过。`;
                 }
                 alert(msg);
             }
