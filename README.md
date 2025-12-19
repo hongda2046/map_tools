@@ -204,9 +204,6 @@ A: 支持Chrome、Firefox、Safari、Edge等现代浏览器的较新版本。
 
 ## Git 管理
 
-### 仓库信息
-- **GitHub 仓库地址**: https://github.com/hongda2046/map_tools
-- **当前分支**: main
 
 ### 常用 Git 命令
 ```bash
@@ -216,32 +213,3 @@ git commit -m "提交信息"     # 提交暂存区的文件
 git push origin main          # 推送到远程仓库
 git pull origin main          # 拉取远程仓库更新
 ```
-
-### 提交消息格式
-```
-<类型>: <简要描述>
-
-详细描述（可选）
-```
-
-**类型说明**:
-- `feat`: 新功能
-- `fix`: 问题修复
-- `docs`: 文档更新
-- `style`: 代码格式调整
-- `refactor`: 代码重构
-
-## 许可证
-
-本项目采用MIT许可证。
-
-## 贡献
-
-欢迎提交Issue和Pull Request来改进项目功能。
-
----
-
-**项目创建**: 2025年11月
-**当前版本**: v2.1
-**技术支持**: HTML5 Canvas + 原生JavaScript
-**适用场景**: 地图设计、网格系统开发、游戏资源配置、教学演示
