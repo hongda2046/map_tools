@@ -76,5 +76,11 @@ window.MAP_RESOURCES = [
   { id: 4005, name: "废弃炼铁厂5级", type: 2 },
   { id: 4006, name: "废弃炼铁厂6级", type: 2 },
   { id: 4007, name: "废弃炼铁厂7级", type: 2 },
-  { id: 4008, name: "废弃炼铁厂8级", type: 2 }
+  { id: 4008, name: "废弃炼铁厂8级", type: 2 },
+
+  // 联盟资源 (type=3)
+  { id: 5001, name: "联盟农场", type: 3 },
+  { id: 5002, name: "联盟伐木厂", type: 3 },
+  { id: 5003, name: "联盟煤矿厂", type: 3 },
+  { id: 5004, name: "联盟铁矿厂", type: 3 }
 ];

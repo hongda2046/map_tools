@@ -366,6 +366,66 @@
 					<!-- 新增：直接添加到当前选中格子的按钮 -->
 					<button id="applyResourceToCellBtn">资源到格子</button>
 				</div>
+
+				<hr style="margin:12px 0;">
+
+				<!-- 联盟资源控制区域 -->
+				<div style="background:#f8f9fa; padding:10px; border-radius:5px; margin-bottom:10px;">
+					<h4 style="margin:0 0 10px 0; color:#333; font-size:14px;">联盟资源配置</h4>
+
+					<!-- 剔除功能按钮 -->
+					<div style="margin-bottom:10px;">
+						<button id="excludeBtn" style="background:#ffc107; color:#000; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
+							点击剔除格子（激活后单击格子标黄）
+						</button>
+						<button id="clearExcludeBtn" style="background:#6c757d; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer; margin-left:8px;">
+							清除剔除
+						</button>
+					</div>
+
+					<!-- 联盟资源数量输入 -->
+					<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+						<div>
+							<label style="font-size:12px; color:#666;">联盟农场数量：</label>
+							<input type="number" id="allianceFarm" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
+						</div>
+						<div>
+							<label style="font-size:12px; color:#666;">联盟伐木厂数量：</label>
+							<input type="number" id="allianceWood" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
+						</div>
+						<div>
+							<label style="font-size:12px; color:#666;">联盟煤矿厂数量：</label>
+							<input type="number" id="allianceMine" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
+						</div>
+						<div>
+							<label style="font-size:12px; color:#666;">联盟铁矿厂数量：</label>
+							<input type="number" id="allianceIron" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
+						</div>
+					</div>
+
+					<!-- 资源半径限制 -->
+					<div style="margin-bottom:10px;">
+						<label style="font-size:12px; color:#666;">资源半径限制（格数）：</label>
+						<input type="number" id="resourceRadius" value="2" min="0" style="width:80px; padding:4px; border:1px solid #ddd; border-radius:3px;">
+						<small style="color:#999; font-size:11px;">0=无限制，1=相邻格子不能生成</small>
+					</div>
+
+					<!-- 生成联盟资源按钮 -->
+					<div style="display:flex; gap:8px; margin-bottom:10px;">
+						<button id="generateAllianceBtn" style="background:#28a745; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
+							生成联盟资源
+						</button>
+						<button id="clearAllianceBtn" style="background:#dc3545; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
+							清除联盟资源
+						</button>
+					</div>
+
+					<!-- 资源统计显示 -->
+					<div id="resourceStats" style="background:#e9ecef; padding:8px; border-radius:4px; font-size:12px; display:none;">
+						<div id="statsContent"></div>
+					</div>
+				</div>
+
 				<hr style="margin:10px 0;">
 				<div style="display:flex; gap:8px; margin-top:10px;">
 					<button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
@@ -420,6 +480,11 @@
                 this.allItems = []; // 原始数组含 type
                 this.monsters = []; // type=1
                 this.resources = []; // type=2
+                this.allianceResources = []; // type=3
+
+                // 剔除功能相关
+                this.excludeMode = false;
+                this.excludedCells = new Set(); // 存储被剔除的格子ID
 
                 this.initEventListeners();
                 this.loadResourcesFromGlobal();
@@ -479,6 +544,20 @@
                     this.exportSeparatedData();
                 });
 
+                // 联盟资源相关事件监听器
+                document.getElementById('excludeBtn').addEventListener('click', () => {
+                    this.toggleExcludeMode();
+                });
+                document.getElementById('clearExcludeBtn').addEventListener('click', () => {
+                    this.clearExcludedCells();
+                });
+                document.getElementById('generateAllianceBtn').addEventListener('click', () => {
+                    this.generateAllianceResources();
+                });
+                document.getElementById('clearAllianceBtn').addEventListener('click', () => {
+                    this.clearAllianceResources();
+                });
+
                 // Set quantity buttons for batch or single selection edits
                 document.getElementById('setMonsterQtyBtn').addEventListener('click', () => {
                     this.setItemQuantity(1);
@@ -530,6 +609,7 @@
 
                 this.monsters = this.allItems.filter(i => Number(i.type) === 1).map(i => Object.assign({}, i));
                 this.resources = this.allItems.filter(i => Number(i.type) === 2).map(i => Object.assign({}, i));
+                this.allianceResources = this.allItems.filter(i => Number(i.type) === 3).map(i => Object.assign({}, i));
 
                 this.updateMonsterList();
                 this.updateResourceList();
@@ -865,9 +945,11 @@
                 this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
                 this.ctx.lineWidth = isSelected ? 2 : 1;
 
-                // determine fill: selected -> red; highlighted layer -> green; otherwise checker
+                // determine fill: selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
                 if (isSelected) {
                     this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                } else if (this.excludedCells && this.excludedCells.has(cell.id)) {
+                    this.ctx.fillStyle = 'rgba(255, 235, 59, 0.5)'; // 黄色标示被剔除的格子
                 } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
                     this.ctx.fillStyle = 'rgba(0, 128, 0, 0.25)';
                 } else {
@@ -1010,9 +1092,20 @@
                 const { x, y } = this.getEventMapCoordinates(event);
                 const clicked = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
                 if (clicked) {
-                    this.selectedCell = clicked;
-                    this.updateCellInfo(clicked);
-                    this.drawMap();
+                    // 如果在剔除模式下，切换格子的剔除状态
+                    if (this.excludeMode) {
+                        if (this.excludedCells.has(clicked.id)) {
+                            this.excludedCells.delete(clicked.id);
+                        } else {
+                            this.excludedCells.add(clicked.id);
+                        }
+                        this.drawMap();
+                    } else {
+                        // 正常选择模式
+                        this.selectedCell = clicked;
+                        this.updateCellInfo(clicked);
+                        this.drawMap();
+                    }
                 }
             }
 
@@ -1381,6 +1474,218 @@
                 URL.revokeObjectURL(url);
 
                 alert(`已导出 ${dataLines.length} 个格子的坐标数据到文件：map_coordinates_${new Date().getTime()}.txt`);
+            }
+
+            // === 联盟资源相关方法 ===
+
+            // 切换剔除模式
+            toggleExcludeMode() {
+                this.excludeMode = !this.excludeMode;
+                const btn = document.getElementById('excludeBtn');
+                if (this.excludeMode) {
+                    btn.style.background = '#ff5722';
+                    btn.textContent = '剔除模式已激活（再次点击关闭）';
+                    this.canvas.style.cursor = 'crosshair';
+                } else {
+                    btn.style.background = '#ffc107';
+                    btn.textContent = '点击剔除格子（激活后单击格子标黄）';
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+
+            // 清除所有剔除的格子
+            clearExcludedCells() {
+                this.excludedCells.clear();
+                this.drawMap();
+            }
+
+            // 生成联盟资源
+            generateAllianceResources() {
+                // 获取输入的数量
+                const farmCount = parseInt(document.getElementById('allianceFarm').value) || 0;
+                const woodCount = parseInt(document.getElementById('allianceWood').value) || 0;
+                const mineCount = parseInt(document.getElementById('allianceMine').value) || 0;
+                const ironCount = parseInt(document.getElementById('allianceIron').value) || 0;
+                const radius = parseInt(document.getElementById('resourceRadius').value) || 0;
+
+                if (farmCount === 0 && woodCount === 0 && mineCount === 0 && ironCount === 0) {
+                    alert('请至少输入一种资源的数量！');
+                    return;
+                }
+
+                // 清除现有的联盟资源
+                this.clearAllianceResources(false); // 不显示提示，因为我们要显示新的统计
+
+                // 准备要分配的资源
+                const resourcesToAllocate = [];
+                if (farmCount > 0) resourcesToAllocate.push({ id: 5001, name: '联盟农场', count: farmCount });
+                if (woodCount > 0) resourcesToAllocate.push({ id: 5002, name: '联盟伐木厂', count: woodCount });
+                if (mineCount > 0) resourcesToAllocate.push({ id: 5003, name: '联盟煤矿厂', count: mineCount });
+                if (ironCount > 0) resourcesToAllocate.push({ id: 5004, name: '联盟铁矿厂', count: ironCount });
+
+                // 获取可用的格子（未被剔除的）
+                const availableCells = this.cells.filter(cell => !this.excludedCells.has(cell.id));
+
+                if (availableCells.length === 0) {
+                    alert('没有可用的格子生成资源！请先清除剔除或选择其他格子。');
+                    return;
+                }
+
+                // 记录分配统计
+                const stats = {
+                    total: 0,
+                    allocated: 0,
+                    insufficient: []
+                };
+
+                // 为每种资源分配格子
+                for (const resource of resourcesToAllocate) {
+                    stats.total += resource.count;
+                    const allocated = this.allocateResourceToCells(resource, availableCells, radius);
+                    stats.allocated += allocated;
+                    if (allocated < resource.count) {
+                        stats.insufficient.push({
+                            name: resource.name,
+                            required: resource.count,
+                            allocated: allocated
+                        });
+                    }
+                }
+
+                // 更新显示和统计
+                this.drawMap();
+                this.showResourceStats(stats);
+            }
+
+            // 将资源分配到格子
+            allocateResourceToCells(resource, availableCells, radius) {
+                // 复制可用格子列表，避免修改原数组
+                const cells = [...availableCells];
+                let allocated = 0;
+
+                // 随机打乱格子顺序，使分配更加随机
+                for (let i = cells.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [cells[i], cells[j]] = [cells[j], cells[i]];
+                }
+
+                // 为每个资源单位分配格子
+                for (let i = 0; i < resource.count && cells.length > 0; i++) {
+                    // 找到一个符合半径限制的格子
+                    let foundCell = null;
+                    for (let j = 0; j < cells.length; j++) {
+                        const cell = cells[j];
+                        if (this.isCellValidForResource(cell, resource.id, radius)) {
+                            foundCell = cell;
+                            cells.splice(j, 1); // 从可用列表中移除
+                            break;
+                        }
+                    }
+
+                    if (foundCell) {
+                        // 添加资源到格子
+                        if (!foundCell.resources) {
+                            foundCell.resources = [];
+                        }
+                        foundCell.resources.push({
+                            id: resource.id,
+                            name: resource.name,
+                            type: 3,
+                            qty: 1
+                        });
+                        allocated++;
+                    } else {
+                        // 没有找到符合的格子，停止分配
+                        break;
+                    }
+                }
+
+                return allocated;
+            }
+
+            // 检查格子是否可以放置资源（考虑半径限制）
+            isCellValidForResource(cell, resourceId, radius) {
+                if (radius === 0) return true;
+
+                // 获取格子的位置
+                const cellLayer = cell.layer;
+                const cellPosition = this.getCellPositionInLayer(cell);
+
+                // 检查半径内的其他格子是否有相同类型的资源
+                for (const otherCell of this.cells) {
+                    if (otherCell.id === cell.id) continue;
+
+                    // 计算距离
+                    const otherLayer = otherCell.layer;
+                    const otherPosition = this.getCellPositionInLayer(otherCell);
+                    const distance = Math.sqrt(
+                        Math.pow(cellLayer - otherLayer, 2) +
+                        Math.pow(cellPosition - otherPosition, 2)
+                    );
+
+                    // 如果在半径内，检查是否有相同ID的资源
+                    if (distance <= radius && otherCell.resources) {
+                        const hasSameResource = otherCell.resources.some(r => r.id === resourceId);
+                        if (hasSameResource) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            // 获取格子在圈层中的位置
+            getCellPositionInLayer(cell) {
+                const layerCells = this.cells.filter(c => c.layer === cell.layer);
+                for (let i = 0; i < layerCells.length; i++) {
+                    if (layerCells[i].id === cell.id) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            // 清除联盟资源
+            clearAllianceResources(showAlert = true) {
+                let clearedCount = 0;
+                for (const cell of this.cells) {
+                    if (cell.resources) {
+                        const allianceResources = cell.resources.filter(r => r.type === 3);
+                        clearedCount += allianceResources.length;
+                        cell.resources = cell.resources.filter(r => r.type !== 3);
+                    }
+                }
+
+                this.drawMap();
+                document.getElementById('resourceStats').style.display = 'none';
+
+                if (showAlert && clearedCount > 0) {
+                    alert(`已清除 ${clearedCount} 个联盟资源！`);
+                }
+            }
+
+            // 显示资源统计
+            showResourceStats(stats) {
+                const statsDiv = document.getElementById('resourceStats');
+                const contentDiv = document.getElementById('statsContent');
+
+                let html = `<strong>资源生成统计：</strong><br>`;
+                html += `总计需要：${stats.total} 个<br>`;
+                html += `成功生成：${stats.allocated} 个<br>`;
+
+                if (stats.insufficient.length > 0) {
+                    html += `<br><strong style="color: #ff5722;">⚠️ 资源不足：</strong><br>`;
+                    for (const item of stats.insufficient) {
+                        html += `${item.name}：需要 ${item.required} 个，只能生成 ${item.allocated} 个<br>`;
+                    }
+                    html += `<br><small style="color: #666;">提示：您可以尝试减少资源数量或增加可用格子数量</small>`;
+                } else {
+                    html += `<br><strong style="color: #4caf50;">✅ 所有资源已成功生成！</strong>`;
+                }
+
+                contentDiv.innerHTML = html;
+                statsDiv.style.display = 'block';
             }
         }
 
