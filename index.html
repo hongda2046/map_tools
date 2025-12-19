@@ -1475,19 +1475,25 @@
                     // 创建坐标数据内容
                     const coordinateContent = dataLines.join('\n');
 
-                    // 收集联盟资源数据
-                    const allianceResourcesMap = new Map();
+                    // 收集联盟资源坐标数据
+                    const allianceResourceLines = [];
                     for (const cell of this.cells) {
-                        if (cell.resources && cell.resources.length > 0) {
-                            // 只处理联盟资源（type=3）
-                            const allianceResources = cell.resources.filter(r => r.type === 3);
-                            if (allianceResources.length > 0) {
-                                // 格式：格子ID:资源ID;数量|资源ID;数量
-                                const resourceData = allianceResources
-                                    .sort((a, b) => a.id - b.id) // 按资源ID排序
-                                    .map(r => `${r.id};${r.qty}`)
-                                    .join('|');
-                                allianceResourcesMap.set(cell.id, resourceData);
+                        if (cell.allianceResources && cell.allianceResources.length > 0) {
+                            for (const resource of cell.allianceResources) {
+                                // 资源名称映射
+                                const resourceNames = {
+                                    5001: '联盟农场',
+                                    5002: '联盟伐木厂',
+                                    5003: '联盟煤矿厂',
+                                    5004: '联盟铁矿厂'
+                                };
+                                const resourceName = resourceNames[resource.id] || `资源${resource.id}`;
+
+                                // 为每个坐标点生成一行
+                                for (const coord of resource.coordinates) {
+                                    // 格式：联盟铁矿厂:512;444
+                                    allianceResourceLines.push(`${resourceName}:${coord.x};${coord.y}`);
+                                }
                             }
                         }
                     }
@@ -1495,25 +1501,10 @@
                     // 构建最终文本内容
                     let finalContent = coordinateContent;
 
-                    // 如果有联盟资源数据，追加到文件末尾
-                    if (allianceResourcesMap.size > 0) {
-                        finalContent += '\n\n联盟资源数据：\n';
-
-                        // 按格子ID排序输出
-                        const sortedCellIds = Array.from(allianceResourcesMap.keys()).sort((a, b) => a - b);
-
-                        // 创建资源名称映射
-                        const resourceNames = {
-                            5001: '联盟农场',
-                            5002: '联盟伐木厂',
-                            5003: '联盟煤矿厂',
-                            5004: '联盟铁矿厂'
-                        };
-
-                        for (const cellId of sortedCellIds) {
-                            const resourceData = allianceResourcesMap.get(cellId);
-                            finalContent += `${cellId}:${resourceData}\n`;
-                        }
+                    // 如果有联盟资源坐标数据，追加到文件末尾
+                    if (allianceResourceLines.length > 0) {
+                        finalContent += '\n\n联盟资源坐标数据：\n';
+                        finalContent += allianceResourceLines.join('\n');
                     }
 
                     // 创建Blob对象并下载为txt文件
@@ -1528,8 +1519,8 @@
                     URL.revokeObjectURL(url);
 
                     let message = `已导出 ${dataLines.length} 个格子的坐标数据`;
-                    if (allianceResourcesMap.size > 0) {
-                        message += `和 ${allianceResourcesMap.size} 个格子的联盟资源数据`;
+                    if (allianceResourceLines.length > 0) {
+                        message += `和 ${allianceResourceLines.length} 个联盟资源坐标点`;
                     }
                     message += `到文件：map_coordinates_${new Date().getTime()}.txt`;
                     alert(message);
@@ -1585,53 +1576,64 @@
 
                     // 准备要分配到每个格子的资源列表
                     const resourcesPerCell = [];
-                    if (farmCount > 0) resourcesPerCell.push({ id: 5001, name: '联盟农场', qty: farmCount });
-                    if (woodCount > 0) resourcesPerCell.push({ id: 5002, name: '联盟伐木厂', qty: woodCount });
-                    if (mineCount > 0) resourcesPerCell.push({ id: 5003, name: '联盟煤矿厂', qty: mineCount });
-                    if (ironCount > 0) resourcesPerCell.push({ id: 5004, name: '联盟铁矿厂', qty: ironCount });
+                    if (farmCount > 0) resourcesPerCell.push({ id: 5001, name: '联盟农场', count: farmCount });
+                    if (woodCount > 0) resourcesPerCell.push({ id: 5002, name: '联盟伐木厂', count: woodCount });
+                    if (mineCount > 0) resourcesPerCell.push({ id: 5003, name: '联盟煤矿厂', count: mineCount });
+                    if (ironCount > 0) resourcesPerCell.push({ id: 5004, name: '联盟铁矿厂', count: ironCount });
 
                     // 记录分配统计
                     const stats = {
                         totalCells: availableCells.length,
-                        resourcesPerCell: resourcesPerCell.length,
-                        totalResources: availableCells.length * resourcesPerCell.length,
+                        resourcesPerCell: resourcesPerCell.reduce((sum, r) => sum + r.count, 0),
+                        totalResources: availableCells.length * resourcesPerCell.reduce((sum, r) => sum + r.count, 0),
                         generated: 0
                     };
 
-                    // 为每个可用格子添加所有指定的资源
+                    // 为每个可用格子生成资源的具体坐标点
                     for (const cell of availableCells) {
-                        // 检查半径限制
-                        let canAddResources = true;
+                        // 获取格子的边界坐标
+                        const bounds = this.getCellBounds(cell);
+                        if (!bounds) continue;
 
-                        // 对于每种要添加的资源，检查是否满足半径限制
+                        // 为每种资源类型生成指定数量的随机坐标点
                         for (const resource of resourcesPerCell) {
-                            if (!this.isCellValidForResource(cell, resource.id, radius)) {
-                                canAddResources = false;
-                                break;
-                            }
-                        }
+                            const coordinates = [];
 
-                        // 如果满足半径限制，添加资源到格子
-                        if (canAddResources) {
-                            if (!cell.resources) {
-                                cell.resources = [];
-                            }
+                            // 生成指定数量的随机坐标点
+                            for (let i = 0; i < resource.count; i++) {
+                                // 在格子边界内生成随机坐标
+                                let attempts = 0;
+                                let validCoordinate = null;
 
-                            // 添加所有资源类型到这个格子
-                            for (const resource of resourcesPerCell) {
-                                // 检查是否已有相同资源，如果有则更新数量
-                                const existingResource = cell.resources.find(r => r.id === resource.id);
-                                if (existingResource) {
-                                    existingResource.qty += resource.qty;
-                                } else {
-                                    cell.resources.push({
-                                        id: resource.id,
-                                        name: resource.name,
-                                        type: 3,
-                                        qty: resource.qty
-                                    });
+                                // 最多尝试100次找到有效的坐标（考虑半径限制）
+                                while (attempts < 100 && !validCoordinate) {
+                                    const x = Math.floor(Math.random() * (bounds.maxX - bounds.minX + 1)) + bounds.minX;
+                                    const y = Math.floor(Math.random() * (bounds.maxY - bounds.minY + 1)) + bounds.minY;
+
+                                    // 检查半径限制
+                                    if (this.isCoordinateValidForResource(x, y, resource.id, radius)) {
+                                        validCoordinate = { x, y };
+                                    }
+                                    attempts++;
                                 }
-                                stats.generated++;
+
+                                if (validCoordinate) {
+                                    coordinates.push(validCoordinate);
+                                    stats.generated++;
+                                }
+                            }
+
+                            // 将坐标数据存储到格子中
+                            if (coordinates.length > 0) {
+                                if (!cell.allianceResources) {
+                                    cell.allianceResources = [];
+                                }
+                                cell.allianceResources.push({
+                                    id: resource.id,
+                                    name: resource.name,
+                                    type: 3,
+                                    coordinates: coordinates
+                                });
                             }
                         }
                     }
@@ -1639,6 +1641,49 @@
                     // 更新显示和统计
                     this.drawMap();
                     this.showResourceStats(stats);
+                }
+
+                // 获取格子的边界坐标
+                getCellBounds(cell) {
+                    if (!cell.coordinates || cell.coordinates.length < 4) return null;
+
+                    const xs = cell.coordinates.map(coord => coord[0]);
+                    const ys = cell.coordinates.map(coord => coord[1]);
+
+                    return {
+                        minX: Math.min(...xs),
+                        maxX: Math.max(...xs),
+                        minY: Math.min(...ys),
+                        maxY: Math.max(...ys)
+                    };
+                }
+
+                // 检查坐标是否可以放置资源（考虑半径限制）
+                isCoordinateValidForResource(x, y, resourceId, radius) {
+                    if (radius === 0) return true;
+
+                    // 检查所有格子的联盟资源坐标
+                    for (const cell of this.cells) {
+                        if (!cell.allianceResources) continue;
+
+                        for (const resource of cell.allianceResources) {
+                            if (resource.id !== resourceId) continue; // 只检查相同类型的资源
+
+                            for (const coord of resource.coordinates) {
+                                // 计算两个坐标点之间的距离
+                                const distance = Math.sqrt(
+                                    Math.pow(x - coord.x, 2) + Math.pow(y - coord.y, 2)
+                                );
+
+                                // 如果距离小于半径限制，不能放置
+                                if (distance < radius) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
                 }
 
                 // 将资源分配到格子
@@ -1748,10 +1793,18 @@
                 clearAllianceResources(showAlert = true) {
                     let clearedCount = 0;
                     for (const cell of this.cells) {
+                        // 清除旧的资源数据结构
                         if (cell.resources) {
                             const allianceResources = cell.resources.filter(r => r.type === 3);
                             clearedCount += allianceResources.length;
                             cell.resources = cell.resources.filter(r => r.type !== 3);
+                        }
+                        // 清除新的坐标数据结构
+                        if (cell.allianceResources) {
+                            for (const resource of cell.allianceResources) {
+                                clearedCount += resource.coordinates.length;
+                            }
+                            delete cell.allianceResources;
                         }
                     }
 
@@ -1759,7 +1812,7 @@
                     document.getElementById('resourceStats').style.display = 'none';
 
                     if (showAlert && clearedCount > 0) {
-                        alert(`已清除 ${clearedCount} 个联盟资源！`);
+                        alert(`已清除 ${clearedCount} 个联盟资源坐标点！`);
                     }
                 }
 
