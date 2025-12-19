@@ -390,14 +390,6 @@
                 <div class="info-panel">
                     <h3>格子信息</h3>
                     <p id="cellInfo">点击格子查看详细信息</p>
-
-                    <!-- 格子内资源点坐标显示 -->
-                    <div id="cellResourceCoords" style="margin-top: 15px; display: none;">
-                        <h4 style="margin: 10px 0 5px 0; color: #333; font-size: 14px;">格子内资源坐标：</h4>
-                        <div id="resourceCoordsList"
-                            style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto;">
-                        </div>
-                    </div>
                 </div>
 
             </div>
@@ -475,20 +467,20 @@
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
                     <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <label for="allianceFarm" style="margin-right: 10px; min-width: 100px;">联盟农场数量：</label>
-                        <input type="number" id="allianceFarm" value="0" min="0" style="width: 100px; padding: 6px;">
+                        <label for="allianceFarm" style="margin-right: 10px; min-width: 110px;">农场数量：</label>
+                        <input type="number" id="allianceFarm" value="0" min="0" style="width: 80px; padding: 6px;">
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <label for="allianceWood" style="margin-right: 10px; min-width: 100px;">联盟伐木厂数量：</label>
-                        <input type="number" id="allianceWood" value="0" min="0" style="width: 100px; padding: 6px;">
+                        <label for="allianceWood" style="margin-right: 10px; min-width: 110px;">伐木厂数量：</label>
+                        <input type="number" id="allianceWood" value="0" min="0" style="width: 80px; padding: 6px;">
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <label for="allianceMine" style="margin-right: 10px; min-width: 100px;">联盟煤矿厂数量：</label>
-                        <input type="number" id="allianceMine" value="0" min="0" style="width: 100px; padding: 6px;">
+                        <label for="allianceMine" style="margin-right: 10px; min-width: 110px;">煤矿厂数量：</label>
+                        <input type="number" id="allianceMine" value="0" min="0" style="width: 80px; padding: 6px;">
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <label for="allianceIron" style="margin-right: 10px; min-width: 100px;">联盟铁矿厂数量：</label>
-                        <input type="number" id="allianceIron" value="0" min="0" style="width: 100px; padding: 6px;">
+                        <label for="allianceIron" style="margin-right: 10px; min-width: 110px;">铁矿厂数量：</label>
+                        <input type="number" id="allianceIron" value="0" min="0" style="width: 80px; padding: 6px;">
                     </div>
                 </div>
 
@@ -513,6 +505,14 @@
                 <div id="resourceStats"
                     style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
                     <div id="statsContent"></div>
+                </div>
+
+                <!-- 格子内资源点坐标显示 -->
+                <div id="cellResourceCoords" style="margin-top: 15px; display: none;">
+                    <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">格子内资源坐标：</h4>
+                    <div id="resourceCoordsList"
+                        style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto;">
+                    </div>
                 </div>
             </div>
         </div>
