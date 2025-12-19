@@ -163,11 +163,14 @@
                 background-color: #0056b3;
             }
 
-            
+
             #printBtn {
                 background-color: #dc3545;
                 color: white;
-                grid-column: span 2;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             #printBtn:hover {
@@ -290,7 +293,10 @@
             #exportResourceBtn {
                 background-color: #6f42c1;
                 color: white;
-                margin-top: 6px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .canvas-container {
@@ -299,10 +305,12 @@
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
                 padding: 20px;
                 display: flex;
-                justify-content: center;
+                flex-direction: column;
+                justify-content: flex-start;
                 align-items: center;
                 overflow: hidden;
                 min-width: 0;
+                min-height: 700px;
             }
 
             #mapCanvas {
@@ -430,11 +438,30 @@
             <div class="canvas-container">
                 <canvas id="mapCanvas"></canvas>
 
-                <!-- 导出按钮组 -->
-                <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
-                    <button id="printBtn">打印数据</button>
-                    <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
+                <!-- 导出和查找按钮组 - 左右对齐显示 -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; width: 100%; min-width: 600px;">
+                    <!-- 左侧：导出按钮 -->
+                    <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
+                        <button id="printBtn">打印格子坐标数据</button>
+                        <button id="exportResourceBtn">(怪先,空行,资源)导出</button>
+                    </div>
+
+                    <!-- 右侧：坐标查找 -->
+                    <div style="display: flex; gap: 10px; align-items: center; flex-shrink: 0;">
+                        <label style="font-size: 14px; color: #333; white-space: nowrap;">坐标查找：</label>
+                        <input type="text" id="coordinateInput" placeholder="X;Y"
+                            style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button id="findCellBtn"
+                            style="background: #007bff; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">查找</button>
+                        <button id="clearSearchBtn"
+                            style="background: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">清除</button>
+                    </div>
                 </div>
+
+                <!-- 坐标查找结果显示区域 -->
+                <div id="coordinateSearchResult"
+                    style="margin-top: 10px; text-align: center; font-size: 14px; color: #333; min-height: 14px;"></div>
             </div>
 
             <!-- 第4列：联盟资源配置 -->
@@ -534,6 +561,9 @@
                     // 被选中高亮的圈层集合，存储为零基索引（layer 变量）
                     this.highlightedLayers = new Set();
 
+                    // 坐标查找高亮的格子
+                    this.searchHighlightedCell = null;
+
                     // devicePixelRatio 支持
                     this.dpr = window.devicePixelRatio || 1;
 
@@ -564,7 +594,7 @@
                         this.generateMap();
                     });
 
-                    
+
                     document.getElementById('printBtn').addEventListener('click', () => {
                         this.printData();
                     });
@@ -603,6 +633,23 @@
 
                     document.getElementById('exportResourceBtn').addEventListener('click', () => {
                         this.exportSeparatedData();
+                    });
+
+                    // 坐标查找功能
+                    document.getElementById('findCellBtn').addEventListener('click', () => {
+                        this.findCellByCoordinate();
+                    });
+
+                    // 坐标输入框回车查找
+                    document.getElementById('coordinateInput').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.findCellByCoordinate();
+                        }
+                    });
+
+                    // 清除查找结果
+                    document.getElementById('clearSearchBtn').addEventListener('click', () => {
+                        this.clearCoordinateSearch();
                     });
 
                     // 联盟资源相关事件监听器
@@ -851,7 +898,6 @@
 
                     this.updateCanvasSize();
                     this.drawMap();
-                    this.updatePresetButtons();
                 }
 
                 generateCellsSpiral() {
@@ -1002,13 +1048,23 @@
                 drawCell(cell, isSelected) {
                     const { coordinates, id, row, col, layer } = cell;
 
-                    // polygon style
-                    this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
-                    this.ctx.lineWidth = isSelected ? 2 : 1;
+                    // 判断是否是查找高亮的格子
+                    const isSearchHighlighted = this.searchHighlightedCell && this.searchHighlightedCell.id === cell.id;
 
-                    // determine fill: selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
-                    if (isSelected) {
-                        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                    // polygon style - 查找高亮用蓝色，手动选择用红色
+                    if (isSearchHighlighted) {
+                        this.ctx.strokeStyle = '#007bff';  // 蓝色边框
+                        this.ctx.lineWidth = 3;  // 更粗的边框
+                    } else {
+                        this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
+                        this.ctx.lineWidth = isSelected ? 2 : 1;
+                    }
+
+                    // determine fill: search highlight -> blue; selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
+                    if (isSearchHighlighted) {
+                        this.ctx.fillStyle = 'rgba(0, 123, 255, 0.3)';  // 蓝色填充
+                    } else if (isSelected) {
+                        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';  // 红色填充
                     } else if (this.excludedCells && this.excludedCells.has(cell.id)) {
                         this.ctx.fillStyle = 'rgba(255, 235, 59, 0.5)'; // 黄色标示被剔除的格子
                     } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
@@ -1269,7 +1325,7 @@
                     }
                 }
 
-                
+
                 handleMouseDown(event) {
                     if (event.button === 2) {
                         this.isDragging = true;
@@ -1927,6 +1983,68 @@
 
                     contentDiv.innerHTML = html;
                     statsDiv.style.display = 'block';
+                }
+
+                // === 坐标查找功能 ===
+
+                // 根据坐标查找格子并高亮显示
+                findCellByCoordinate() {
+                    const input = document.getElementById('coordinateInput').value.trim();
+                    const resultDiv = document.getElementById('coordinateSearchResult');
+
+                    if (!input) {
+                        resultDiv.innerHTML = '<span style="color: #ff5722;">请输入坐标，格式：X;Y</span>';
+                        return;
+                    }
+
+                    // 解析坐标，支持分号或空格分隔
+                    const coords = input.split(/[;,]\s*/);
+                    if (coords.length !== 2) {
+                        resultDiv.innerHTML = '<span style="color: #ff5722;">坐标格式错误，请使用格式：X;Y 或 X,Y</span>';
+                        return;
+                    }
+
+                    const x = parseFloat(coords[0]);
+                    const y = parseFloat(coords[1]);
+
+                    if (isNaN(x) || isNaN(y)) {
+                        resultDiv.innerHTML = '<span style="color: #ff5722;">坐标值必须是数字</span>';
+                        return;
+                    }
+
+                    // 查找包含该坐标的格子
+                    const foundCell = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
+
+                    if (foundCell) {
+                        // 设置查找高亮格子（不改变手动选择）
+                        this.searchHighlightedCell = foundCell;
+                        this.updateCellInfo(foundCell);
+                        this.drawMap();
+
+                        // 显示成功消息
+                        resultDiv.innerHTML = `<span style="color: #007bff;">✅ 找到坐标 (${x}, ${y}) 所在的格子 #${foundCell.id} - 位置：第${foundCell.row + 1}行, 第${foundCell.col + 1}列，第${foundCell.layer + 1}圈</span>`;
+                    } else {
+                        // 清除查找高亮
+                        this.searchHighlightedCell = null;
+                        this.drawMap();
+
+                        resultDiv.innerHTML = `<span style="color: #ff5722;">❌ 未找到坐标 (${x}, ${y}) 所在的格子，请检查坐标是否在地图范围内</span>`;
+                    }
+                }
+
+                // 清除坐标查找结果和高亮
+                clearCoordinateSearch() {
+                    // 清除查找高亮的格子
+                    this.searchHighlightedCell = null;
+
+                    // 清空输入框
+                    document.getElementById('coordinateInput').value = '';
+
+                    // 清除结果显示
+                    document.getElementById('coordinateSearchResult').innerHTML = '';
+
+                    // 重新绘制地图以清除高亮效果
+                    this.drawMap();
                 }
             }
 
