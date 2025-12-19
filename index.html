@@ -372,7 +372,6 @@
                 </div>
                 <div class="button-group">
                     <button id="generateBtn">生成地图</button>
-                    <button id="printBtn">打印数据</button>
                 </div>
 
                 <div class="info-panel">
@@ -424,15 +423,18 @@
                         <button id="applyResourceToCellBtn">资源到格子</button>
                     </div>
                     <hr style="margin:10px 0;">
-                    <div style="display:flex; gap:8px; margin-top:10px;">
-                        <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
-                    </div>
                 </div>
             </div>
 
             <!-- 第3列：画布 -->
             <div class="canvas-container">
                 <canvas id="mapCanvas"></canvas>
+
+                <!-- 导出按钮组 -->
+                <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center;">
+                    <button id="printBtn">打印数据</button>
+                    <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
+                </div>
             </div>
 
             <!-- 第4列：联盟资源配置 -->
