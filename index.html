@@ -321,8 +321,8 @@
                 </div>
                 <div class="input-group">
                     <label for="cellSize">格子边长 (像素):</label>
-                    <input type="number" id="cellSize" value="100" min="10" max="200">
-                    <small class="input-hint">范围: 10-200像素</small>
+                    <input type="number" id="cellSize" value="100" min="1">
+                    <small class="input-hint">最小值: 1像素（必须是整数）</small>
                 </div>
                 <div class="button-group">
                     <button id="generateBtn">生成地图</button>
@@ -746,8 +746,8 @@
                     // validate ranges (基于用户输入的最大坐标)
                     if (this.mapWidth < 100 || this.mapWidth > 2000 ||
                         this.mapHeight < 100 || this.mapHeight > 2000 ||
-                        this.cellSize < 10 || this.cellSize > 200) {
-                        alert('请输入有效的参数范围：\n地图边长(最大坐标): 100-2000 像素\n格子边长: 10-200像素');
+                        this.cellSize < 1) {
+                        alert('请输入有效的参数范围：\n地图边长(最大坐标): 100-2000 像素\n格子边长: 最小1像素');
                         return;
                     }
 
