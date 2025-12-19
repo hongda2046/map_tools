@@ -327,6 +327,64 @@
                 <h3>格子信息</h3>
                 <p id="cellInfo">点击格子查看详细信息</p>
             </div>
+
+            <!-- 联盟资源控制区域 -->
+            <div class="alliance-panel" style="margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">联盟资源配置</h3>
+
+                <!-- 剔除功能按钮 -->
+                <div style="margin-bottom: 15px;">
+                    <button id="excludeBtn" style="background: #ffc107; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                        点击剔除格子（激活后单击格子标黄）
+                    </button>
+                    <button id="clearExcludeBtn" style="background: #6c757d; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 8px;">
+                        清除剔除
+                    </button>
+                </div>
+
+                <!-- 联盟资源数量输入 -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
+                    <div class="input-group">
+                        <label for="allianceFarm">联盟农场数量：</label>
+                        <input type="number" id="allianceFarm" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceWood">联盟伐木厂数量：</label>
+                        <input type="number" id="allianceWood" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceMine">联盟煤矿厂数量：</label>
+                        <input type="number" id="allianceMine" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceIron">联盟铁矿厂数量：</label>
+                        <input type="number" id="allianceIron" value="0" min="0">
+                    </div>
+                </div>
+
+                <!-- 资源半径限制 -->
+                <div class="input-group">
+                    <label for="resourceRadius">资源半径限制（像素）：</label>
+                    <input type="number" id="resourceRadius" value="150" min="0">
+                    <small class="input-hint">0=无限制，150=150像素内不能生成相同资源</small>
+                </div>
+
+                <!-- 生成联盟资源按钮 -->
+                <div class="button-group" style="margin-top: 15px;">
+                    <button id="generateAllianceBtn" style="background: #28a745; color: #fff;">
+                        生成联盟资源
+                    </button>
+                    <button id="clearAllianceBtn" style="background: #dc3545; color: #fff;">
+                        清除联盟资源
+                    </button>
+                </div>
+
+                <!-- 资源统计显示 -->
+                <div id="resourceStats" style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
+                    <div id="statsContent"></div>
+                </div>
+            </div>
         </div>
 
         <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
@@ -366,66 +424,6 @@
 					<!-- 新增：直接添加到当前选中格子的按钮 -->
 					<button id="applyResourceToCellBtn">资源到格子</button>
 				</div>
-
-				<hr style="margin:12px 0;">
-
-				<!-- 联盟资源控制区域 -->
-				<div style="background:#f8f9fa; padding:10px; border-radius:5px; margin-bottom:10px;">
-					<h4 style="margin:0 0 10px 0; color:#333; font-size:14px;">联盟资源配置</h4>
-
-					<!-- 剔除功能按钮 -->
-					<div style="margin-bottom:10px;">
-						<button id="excludeBtn" style="background:#ffc107; color:#000; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
-							点击剔除格子（激活后单击格子标黄）
-						</button>
-						<button id="clearExcludeBtn" style="background:#6c757d; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer; margin-left:8px;">
-							清除剔除
-						</button>
-					</div>
-
-					<!-- 联盟资源数量输入 -->
-					<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
-						<div>
-							<label style="font-size:12px; color:#666;">联盟农场数量：</label>
-							<input type="number" id="allianceFarm" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
-						</div>
-						<div>
-							<label style="font-size:12px; color:#666;">联盟伐木厂数量：</label>
-							<input type="number" id="allianceWood" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
-						</div>
-						<div>
-							<label style="font-size:12px; color:#666;">联盟煤矿厂数量：</label>
-							<input type="number" id="allianceMine" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
-						</div>
-						<div>
-							<label style="font-size:12px; color:#666;">联盟铁矿厂数量：</label>
-							<input type="number" id="allianceIron" value="0" min="0" style="width:100%; padding:4px; border:1px solid #ddd; border-radius:3px;">
-						</div>
-					</div>
-
-					<!-- 资源半径限制 -->
-					<div style="margin-bottom:10px;">
-						<label style="font-size:12px; color:#666;">资源半径限制（格数）：</label>
-						<input type="number" id="resourceRadius" value="2" min="0" style="width:80px; padding:4px; border:1px solid #ddd; border-radius:3px;">
-						<small style="color:#999; font-size:11px;">0=无限制，1=相邻格子不能生成</small>
-					</div>
-
-					<!-- 生成联盟资源按钮 -->
-					<div style="display:flex; gap:8px; margin-bottom:10px;">
-						<button id="generateAllianceBtn" style="background:#28a745; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
-							生成联盟资源
-						</button>
-						<button id="clearAllianceBtn" style="background:#dc3545; color:#fff; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
-							清除联盟资源
-						</button>
-					</div>
-
-					<!-- 资源统计显示 -->
-					<div id="resourceStats" style="background:#e9ecef; padding:8px; border-radius:4px; font-size:12px; display:none;">
-						<div id="statsContent"></div>
-					</div>
-				</div>
-
 				<hr style="margin:10px 0;">
 				<div style="display:flex; gap:8px; margin-top:10px;">
 					<button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
@@ -1607,32 +1605,46 @@
             isCellValidForResource(cell, resourceId, radius) {
                 if (radius === 0) return true;
 
-                // 获取格子的位置
-                const cellLayer = cell.layer;
-                const cellPosition = this.getCellPositionInLayer(cell);
+                // 获取当前格子的中心点坐标
+                const cellCenter = this.getCellCenter(cell);
 
                 // 检查半径内的其他格子是否有相同类型的资源
                 for (const otherCell of this.cells) {
                     if (otherCell.id === cell.id) continue;
 
-                    // 计算距离
-                    const otherLayer = otherCell.layer;
-                    const otherPosition = this.getCellPositionInLayer(otherCell);
-                    const distance = Math.sqrt(
-                        Math.pow(cellLayer - otherLayer, 2) +
-                        Math.pow(cellPosition - otherPosition, 2)
-                    );
+                    // 检查其他格子是否有相同类型的资源
+                    if (otherCell.resources && otherCell.resources.some(r => r.id === resourceId)) {
+                        // 获取其他格子的中心点坐标
+                        const otherCenter = this.getCellCenter(otherCell);
 
-                    // 如果在半径内，检查是否有相同ID的资源
-                    if (distance <= radius && otherCell.resources) {
-                        const hasSameResource = otherCell.resources.some(r => r.id === resourceId);
-                        if (hasSameResource) {
+                        // 计算两个格子中心点之间的像素距离
+                        const distance = Math.sqrt(
+                            Math.pow(cellCenter.x - otherCenter.x, 2) +
+                            Math.pow(cellCenter.y - otherCenter.y, 2)
+                        );
+
+                        // 如果距离小于半径限制，不能放置
+                        if (distance < radius) {
                             return false;
                         }
                     }
                 }
 
                 return true;
+            }
+
+            // 获取格子的中心点坐标
+            getCellCenter(cell) {
+                // 计算格子多边形的中心点
+                let sumX = 0, sumY = 0;
+                for (const point of cell.coordinates) {
+                    sumX += point[0];
+                    sumY += point[1];
+                }
+                return {
+                    x: sumX / cell.coordinates.length,
+                    y: sumY / cell.coordinates.length
+                };
             }
 
             // 获取格子在圈层中的位置
