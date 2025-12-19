@@ -1475,8 +1475,14 @@
                     // 创建坐标数据内容
                     const coordinateContent = dataLines.join('\n');
 
-                    // 收集联盟资源坐标数据
-                    const allianceResourceLines = [];
+                    // 收集联盟资源坐标数据，按类型分组
+                    const resourceGroups = {
+                        '联盟农场': [],
+                        '联盟伐木厂': [],
+                        '联盟煤矿厂': [],
+                        '联盟铁矿厂': []
+                    };
+
                     for (const cell of this.cells) {
                         if (cell.allianceResources && cell.allianceResources.length > 0) {
                             for (const resource of cell.allianceResources) {
@@ -1489,10 +1495,10 @@
                                 };
                                 const resourceName = resourceNames[resource.id] || `资源${resource.id}`;
 
-                                // 为每个坐标点生成一行
+                                // 收集坐标点
                                 for (const coord of resource.coordinates) {
-                                    // 格式：联盟铁矿厂:512;444
-                                    allianceResourceLines.push(`${resourceName}:${coord.x};${coord.y}`);
+                                    // 格式：512;444
+                                    resourceGroups[resourceName].push(`${coord.x};${coord.y}`);
                                 }
                             }
                         }
@@ -1501,10 +1507,21 @@
                     // 构建最终文本内容
                     let finalContent = coordinateContent;
 
-                    // 如果有联盟资源坐标数据，追加到文件末尾
-                    if (allianceResourceLines.length > 0) {
+                    // 如果有联盟资源坐标数据，按类型分组追加到文件末尾
+                    const hasResources = Object.values(resourceGroups).some(group => group.length > 0);
+                    if (hasResources) {
                         finalContent += '\n\n联盟资源坐标数据：\n';
-                        finalContent += allianceResourceLines.join('\n');
+
+                        // 按固定顺序输出资源类型
+                        const resourceOrder = ['联盟农场', '联盟伐木厂', '联盟煤矿厂', '联盟铁矿厂'];
+
+                        for (const resourceName of resourceOrder) {
+                            const coordinates = resourceGroups[resourceName];
+                            if (coordinates.length > 0) {
+                                finalContent += `\n${resourceName}：\n`;
+                                finalContent += coordinates.join('\n');
+                            }
+                        }
                     }
 
                     // 创建Blob对象并下载为txt文件
@@ -1667,7 +1684,8 @@
                         if (!cell.allianceResources) continue;
 
                         for (const resource of cell.allianceResources) {
-                            if (resource.id !== resourceId) continue; // 只检查相同类型的资源
+                            // 移除这行：检查所有资源，不仅仅是相同类型
+                            // if (resource.id !== resourceId) continue;
 
                             for (const coord of resource.coordinates) {
                                 // 计算两个坐标点之间的距离
