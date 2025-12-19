@@ -356,6 +356,300 @@
                     grid-column: span 1;
                 }
             }
+
+            /* 加载动画CSS */
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.9); }
+                to { opacity: 1; transform: scale(1); }
+            }
+
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+
+            /* 通知动画样式 */
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes resourcePulse {
+                0% {
+                    transform: scale(1);
+                    box-shadow: 0 0 0 rgba(0, 123, 255, 0.7);
+                }
+                50% {
+                    transform: scale(1.1);
+                    box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
+                }
+                100% {
+                    transform: scale(1);
+                    box-shadow: 0 0 0 rgba(0, 123, 255, 0.7);
+                }
+            }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                max-width: 400px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                animation: slideInRight 0.3s ease-out;
+            }
+
+            .notification.success {
+                background: linear-gradient(135deg, #28a745, #20c997);
+            }
+
+            .notification.info {
+                background: linear-gradient(135deg, #007bff, #6610f2);
+            }
+
+            .notification.warning {
+                background: linear-gradient(135deg, #ffc107, #fd7e14);
+            }
+
+            .notification.error {
+                background: linear-gradient(135deg, #dc3545, #e83e8c);
+            }
+
+            .notification.hiding {
+                animation: slideOutRight 0.3s ease-in forwards;
+            }
+
+            /* ========== 主题样式 ========== */
+
+            /* 深色主题 */
+            body.dark-theme {
+                background-color: #1a1a1a;
+                color: #e9ecef;
+            }
+
+            body.dark-theme .container {
+                background-color: #2d3748;
+                color: #e9ecef;
+            }
+
+            body.dark-theme .controls,
+            body.dark-theme .layer-panel,
+            body.dark-theme .alliance-panel,
+            body.dark-theme .canvas-container {
+                background-color: #374151;
+                color: #e9ecef;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            body.dark-theme input,
+            body.dark-theme select,
+            body.dark-theme textarea {
+                background-color: #4b5563;
+                color: #e9ecef;
+                border-color: #6b7280;
+            }
+
+            body.dark-theme button {
+                background-color: #4b5563;
+                color: #e9ecef;
+                border-color: #6b7280;
+            }
+
+            body.dark-theme button:hover {
+                background-color: #6b7280;
+            }
+
+            body.dark-theme .input-hint {
+                color: #9ca3af;
+            }
+
+            /* 深色主题下的标题和标签文字 */
+            body.dark-theme h1,
+            body.dark-theme h2,
+            body.dark-theme h3,
+            body.dark-theme h4,
+            body.dark-theme h5,
+            body.dark-theme h6 {
+                color: #e9ecef;
+            }
+
+            body.dark-theme label {
+                color: #e9ecef;
+            }
+
+            body.dark-theme .input-hint {
+                color: #9ca3af;
+            }
+
+            body.dark-theme small {
+                color: #9ca3af;
+            }
+
+            /* 深色主题下的链接和按钮文字 */
+            body.dark-theme a {
+                color: #60a5fa;
+            }
+
+            body.dark-theme .info-panel {
+                background-color: #374151;
+                color: #e9ecef;
+                border-color: #4b5563;
+            }
+
+            body.dark-theme #cellInfo {
+                color: #e9ecef;
+            }
+
+            /* 深色主题下的其他白色背景 */
+            body.dark-theme .theme-controls div[style*="background: #f8f9fa"] {
+                background-color: #374151 !important;
+            }
+
+            body.dark-theme div[style*="background: #f8f9fa"] {
+                background-color: #374151 !important;
+            }
+
+            body.dark-theme div[style*="background: #fff"] {
+                background-color: #374151 !important;
+                color: #e9ecef;
+            }
+
+            body.dark-theme div[style*="background: #fff3cd"] {
+                background-color: #4b5563 !important;
+                color: #e9ecef;
+            }
+
+            body.dark-theme #densityMapContainer {
+                background-color: #374151 !important;
+                color: #e9ecef;
+                border-color: #4b5563;
+            }
+
+            body.dark-theme #chartContainer {
+                background-color: #374151 !important;
+                color: #e9ecef;
+                border-color: #4b5563;
+            }
+
+            body.dark-theme #resourceCoordsList {
+                background-color: #374151 !important;
+                color: #e9ecef;
+            }
+
+            body.dark-theme .preset-btn {
+                background-color: #4b5563 !important;
+                color: #e9ecef;
+                border-color: #6b7280;
+            }
+
+            body.dark-theme .preset-btn:hover {
+                background-color: #6b7280 !important;
+            }
+
+            /* 深色主题下的文字颜色修复 */
+            body.dark-theme h4,
+            body.dark-theme h5,
+            body.dark-theme h1,
+            body.dark-theme h3 {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme .theme-controls h4 {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme .theme-controls h5 {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme .theme-controls label {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme div[style*="color: #333"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme div[style*="color: #495057"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme label[style*="color: #333"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme label[style*="color: #495057"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme span[style*="color: #6c757d"] {
+                color: #9ca3af !important;
+            }
+
+            body.dark-theme div[style*="color: #383d41"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme h5[style*="color: #495057"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme h5[style*="color: #383d41"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme h4[style*="color: #333"] {
+                color: #e9ecef !important;
+            }
+
+            body.dark-theme strong[style*="color: #333"] {
+                color: #e9ecef !important;
+            }
+
+  
+            /* 主题过渡动画 */
+            body {
+                transition: background-color 0.3s ease, color 0.3s ease;
+            }
+
+            .container,
+            .controls,
+            .layer-panel,
+            .alliance-panel,
+            .canvas-container,
+            input,
+            select,
+            textarea,
+            button {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            }
         </style>
     </head>
 
@@ -378,8 +672,89 @@
                     <input type="number" id="cellSize" value="100" min="1">
                     <small class="input-hint">最小值: 1像素（必须是整数）</small>
                 </div>
+
+                <!-- 网格线控制组件 -->
+                <div class="grid-controls">
+                    <h4 style="margin: 15px 0 10px 0; color: #333; font-size: 14px;">网格线设置</h4>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <input type="checkbox" id="showGridLines" style="width: 14px; height: 14px;">
+                        <label for="showGridLines" style="font-size: 13px; color: #333; margin: 0;">显示网格线</label>
+                    </div>
+                    <div id="gridLineOptions" style="margin-left: 24px; display: none;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <label style="font-size: 12px; color: #666; min-width: 60px;">颜色:</label>
+                            <input type="color" id="gridLineColor" value="#cccccc" style="width: 50px; height: 24px; border: 1px solid #ddd; border-radius: 3px;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <label style="font-size: 12px; color: #666; min-width: 60px;">粗细:</label>
+                            <input type="range" id="gridLineWidth" min="1" max="5" value="1" style="width: 80px;">
+                            <span id="gridLineWidthValue" style="font-size: 12px; color: #666; min-width: 20px;">1px</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <label style="font-size: 12px; color: #666; min-width: 60px;">透明度:</label>
+                            <input type="range" id="gridLineOpacity" min="10" max="100" value="50" style="width: 80px;">
+                            <span id="gridLineOpacityValue" style="font-size: 12px; color: #666; min-width: 35px;">50%</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <label style="font-size: 12px; color: #666; min-width: 60px;">层级:</label>
+                            <select id="gridLineLayer" style="width: 80px; padding: 2px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;">
+                                <option value="bottom">底层</option>
+                                <option value="middle" selected>中层</option>
+                                <option value="top">顶层</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <button id="generateBtn">生成地图</button>
+                </div>
+
+                <!-- 主题切换功能 -->
+                <div class="theme-controls" style="margin-top: 20px;">
+                    <h4 style="margin: 15px 0 10px 0; color: #333; font-size: 14px;">主题设置</h4>
+
+                    <!-- 界面主题切换 -->
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 12px;">
+                        <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">界面主题</h5>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="uiTheme" value="light" checked style="margin-right: 6px;">
+                                ☀️ 浅色主题（默认）
+                            </label>
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="uiTheme" value="dark" style="margin-right: 6px;">
+                                🌙 深色主题
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 格子颜色主题 -->
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 12px;">
+                        <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">格子颜色主题</h5>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="cellTheme" value="default" checked style="margin-right: 6px;">
+                                🎨 默认配色（灰白格子）
+                            </label>
+                              <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="cellTheme" value="spring" style="margin-right: 6px;">
+                                🌸 春季主题（粉绿配色）
+                            </label>
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="cellTheme" value="summer" style="margin-right: 6px;">
+                                ☀️ 夏季主题（蓝黄配色）
+                            </label>
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="cellTheme" value="autumn" style="margin-right: 6px;">
+                                🍂 秋季主题（橙棕配色）
+                            </label>
+                            <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                <input type="radio" name="cellTheme" value="winter" style="margin-right: 6px;">
+                                ❄️ 冬季主题（蓝白配色）
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="info-panel">
@@ -436,6 +811,20 @@
 
             <!-- 第3列：画布 -->
             <div class="canvas-container">
+                <!-- 加载动画指示器 -->
+                <div id="loadingIndicator" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); text-align: center; z-index: 1000;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="spinner" style="width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <div>
+                            <h4 style="margin: 0 0 8px 0; color: #333;">正在生成地图...</h4>
+                            <div style="font-size: 14px; color: #666;">已完成：<span id="loadingProgress">0</span>%</div>
+                            <div style="width: 200px; height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 10px; overflow: hidden;">
+                                <div id="loadingBar" style="height: 100%; background: linear-gradient(90deg, #007bff, #28a745); width: 0%; transition: width 0.3s ease; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <canvas id="mapCanvas"></canvas>
 
                 <!-- 导出和查找按钮组 - 左右对齐显示 -->
@@ -531,6 +920,120 @@
                         style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto;">
                     </div>
                 </div>
+
+                <!-- 分隔线 -->
+                <hr style="margin: 20px 0; border: none; border-top: 2px solid #dee2e6;">
+
+                <!-- 资源预览和分析功能 -->
+                <div style="margin-top: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">资源预览与分析</h4>
+
+                    <!-- 预览功能按钮 -->
+                    <div style="margin-bottom: 15px;">
+                        <button id="previewResourcesBtn" style="background: #17a2b8; color: #fff; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%; margin-bottom: 8px;">
+                            🔍 资源预览
+                        </button>
+                        <button id="conflictDetectionBtn" style="background: #fd7e14; color: #fff; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%; margin-bottom: 8px;">
+                            ⚠️ 冲突检测
+                        </button>
+                        <button id="advancedStatsBtn" style="background: #6610f2; color: #fff; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%;">
+                            📊 高级统计
+                        </button>
+                    </div>
+
+                    <!-- 预览结果显示区域 -->
+                    <div id="resourcePreviewPanel" style="display: none;">
+                        <!-- 资源类型选择器 -->
+                        <div style="background: #e9ecef; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                            <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 14px;">资源类型筛选</h5>
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                    <input type="radio" name="heatmapFilter" value="all" checked style="margin-right: 6px;">
+                                    显示所有资源
+                                </label>
+                                <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                    <input type="radio" name="heatmapFilter" value="1" style="margin-right: 6px;">
+                                    只显示怪物 (type=1)
+                                </label>
+                                <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                    <input type="radio" name="heatmapFilter" value="2" style="margin-right: 6px;">
+                                    只显示资源 (type=2)
+                                </label>
+                                <label style="display: flex; align-items: center; font-size: 12px; color: #495057;">
+                                    <input type="radio" name="heatmapFilter" value="3" style="margin-right: 6px;">
+                                    只显示联盟资源 (type=3)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h5 style="margin: 0; color: #495057; font-size: 14px;">资源密度热力图</h5>
+                                <span id="heatmapLegend" style="font-size: 11px; color: #6c757d;">低 → 高</span>
+                            </div>
+                            <div id="densityMapContainer" style="width: 100%; height: 120px; background: #fff; border: 1px solid #dee2e6; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 12px;">
+                                点击"资源预览"生成密度图
+                            </div>
+                        </div>
+
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #ffc107;">
+                            <h5 style="margin: 0 0 5px 0; color: #856404; font-size: 13px;">调整建议</h5>
+                            <div id="optimizationSuggestions" style="font-size: 12px; color: #856404; line-height: 1.4;">
+                                等待分析...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 冲突检测结果显示 -->
+                    <div id="conflictDetectionPanel" style="display: none;">
+                        <div style="background: #f8d7da; padding: 12px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #dc3545;">
+                            <h5 style="margin: 0 0 8px 0; color: #721c24; font-size: 14px;">冲突检测结果</h5>
+                            <div id="conflictReport" style="font-size: 12px; color: #721c24; line-height: 1.4;">
+                                正在检测冲突...
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="autoResolveConflictsBtn" style="background: #28a745; color: #fff; padding: 6px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; flex: 1;">
+                                ✅ 自动解决
+                            </button>
+                            <button id="manualAdjustBtn" style="background: #007bff; color: #fff; padding: 6px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; flex: 1;">
+                                🔧 手动调整
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 高级统计结果显示 -->
+                    <div id="advancedStatsPanel" style="display: none;">
+                        <div style="background: #d1ecf1; padding: 12px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #17a2b8;">
+                            <h5 style="margin: 0 0 8px 0; color: #0c5460; font-size: 14px;">详细统计信息</h5>
+                            <div id="detailedStats" style="font-size: 12px; color: #0c5460; line-height: 1.4;">
+                                正在生成统计报告...
+                            </div>
+                        </div>
+
+                        <!-- 可视化图表区域 -->
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 5px; margin-bottom: 10px;">
+                            <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 14px;">可视化图表</h5>
+                            <div id="chartContainer" style="width: 100%; height: 150px; background: #fff; border: 1px solid #dee2e6; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="statsChart" style="width: 100%; height: 100%; display: none;"></canvas>
+                                <span id="chartPlaceholder" style="color: #6c757d; font-size: 12px;">点击"高级统计"生成图表</span>
+                            </div>
+                        </div>
+
+                        <!-- 圈层分析 -->
+                        <div style="background: #e2e3e5; padding: 12px; border-radius: 5px; margin-bottom: 10px;">
+                            <h5 style="margin: 0 0 8px 0; color: #383d41; font-size: 14px;">圈层分析</h5>
+                            <div id="layerAnalysis" style="font-size: 12px; color: #383d41; line-height: 1.4;">
+                                正在分析圈层分布...
+                            </div>
+                        </div>
+
+                        <!-- 导出报告按钮 -->
+                        <button id="exportReportBtn" style="background: #6f42c1; color: #fff; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; width: 100%;">
+                            📄 导出详细报告
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -564,6 +1067,13 @@
                     // 坐标查找高亮的格子
                     this.searchHighlightedCell = null;
 
+                    // 悬停高亮的格子
+                    this.hoveredCell = null;
+
+                    // 动画相关
+                    this.animationFrame = null;
+                    this.animationStartTime = null;
+
                     // devicePixelRatio 支持
                     this.dpr = window.devicePixelRatio || 1;
 
@@ -584,8 +1094,44 @@
                     this.excludeMode = false;
                     this.excludedCells = new Set(); // 存储被剔除的格子ID
 
+                    // 网格线相关
+                    this.showGridLines = false;
+                    this.gridLineColor = '#cccccc';
+                    this.gridLineWidth = 1;
+                    this.gridLineOpacity = 0.5;
+                    this.gridLineLayer = 'middle'; // 'bottom', 'middle', 'top'
+
+                    // 主题相关
+                    this.currentUITheme = 'light'; // 'light', 'dark'
+                    this.currentCellTheme = 'default'; // 'default', 'spring', 'summer', 'autumn', 'winter'
+
+                    // 格子颜色主题配置
+                    this.cellThemes = {
+                        default: {
+                            odd: '#f9f9f9',
+                            even: '#ffffff'
+                        },
+                                        spring: {
+                            odd: '#ffe0f0',  // 粉色
+                            even: '#e0ffe0'  // 浅绿色
+                        },
+                        summer: {
+                            odd: '#fff3cd',  // 黄色
+                            even: '#d1ecf1'  // 浅蓝色
+                        },
+                        autumn: {
+                            odd: '#ffd4a3',  // 橙色
+                            even: '#d4a373'  // 棕色
+                        },
+                        winter: {
+                            odd: '#e3f2fd',  // 浅蓝色
+                            even: '#f3f4f6'  // 灰白色
+                        }
+                    };
+
                     this.initEventListeners();
                     this.loadResourcesFromGlobal();
+                    this.loadThemeSettings(); // 加载保存的主题设置
                     this.generateMap();
                 }
 
@@ -652,6 +1198,35 @@
                         this.clearCoordinateSearch();
                     });
 
+                    // 网格线控制事件监听器
+                    document.getElementById('showGridLines').addEventListener('change', (e) => {
+                        this.showGridLines = e.target.checked;
+                        document.getElementById('gridLineOptions').style.display = this.showGridLines ? 'block' : 'none';
+                        this.drawMap();
+                    });
+
+                    document.getElementById('gridLineColor').addEventListener('input', (e) => {
+                        this.gridLineColor = e.target.value;
+                        this.drawMap();
+                    });
+
+                    document.getElementById('gridLineWidth').addEventListener('input', (e) => {
+                        this.gridLineWidth = parseInt(e.target.value);
+                        document.getElementById('gridLineWidthValue').textContent = `${this.gridLineWidth}px`;
+                        this.drawMap();
+                    });
+
+                    document.getElementById('gridLineOpacity').addEventListener('input', (e) => {
+                        this.gridLineOpacity = parseInt(e.target.value) / 100;
+                        document.getElementById('gridLineOpacityValue').textContent = `${e.target.value}%`;
+                        this.drawMap();
+                    });
+
+                    document.getElementById('gridLineLayer').addEventListener('change', (e) => {
+                        this.gridLineLayer = e.target.value;
+                        this.drawMap();
+                    });
+
                     // 联盟资源相关事件监听器
                     document.getElementById('excludeBtn').addEventListener('click', () => {
                         this.toggleExcludeMode();
@@ -664,6 +1239,48 @@
                     });
                     document.getElementById('clearAllianceBtn').addEventListener('click', () => {
                         this.clearAllianceResources();
+                    });
+
+                    // 资源预览和分析功能事件监听器
+                    document.getElementById('previewResourcesBtn').addEventListener('click', () => {
+                        this.previewResources();
+                    });
+
+                    // 资源类型筛选事件监听器
+                    document.querySelectorAll('input[name="heatmapFilter"]').forEach(radio => {
+                        radio.addEventListener('change', () => {
+                            this.generateDensityMap();
+                        });
+                    });
+
+                    // 主题切换事件监听器
+                    document.querySelectorAll('input[name="uiTheme"]').forEach(radio => {
+                        radio.addEventListener('change', (e) => {
+                            this.switchUITheme(e.target.value);
+                        });
+                    });
+
+                    // 格子颜色主题切换事件监听器
+                    document.querySelectorAll('input[name="cellTheme"]').forEach(radio => {
+                        radio.addEventListener('change', (e) => {
+                            this.switchCellTheme(e.target.value);
+                        });
+                    });
+
+                      document.getElementById('conflictDetectionBtn').addEventListener('click', () => {
+                        this.detectResourceConflicts();
+                    });
+                    document.getElementById('advancedStatsBtn').addEventListener('click', () => {
+                        this.showAdvancedStatistics();
+                    });
+                    document.getElementById('autoResolveConflictsBtn').addEventListener('click', () => {
+                        this.autoResolveConflicts();
+                    });
+                    document.getElementById('manualAdjustBtn').addEventListener('click', () => {
+                        this.startManualAdjustment();
+                    });
+                    document.getElementById('exportReportBtn').addEventListener('click', () => {
+                        this.exportDetailedReport();
                     });
 
                     // Set quantity buttons for batch or single selection edits
@@ -691,7 +1308,7 @@
                     this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
                     this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
                     this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-                    this.canvas.addEventListener('mouseleave', (e) => this.handleMouseUp(e));
+                    this.canvas.addEventListener('mouseleave', (e) => this.handleMouseLeave(e));
 
                     // resize / dpr change
                     window.addEventListener('resize', () => {
@@ -828,7 +1445,7 @@
                     return fullText.split('(数量:')[0].trim();
                 }
 
-                generateMap() {
+                async generateMap() {
                     // read inputs (用户输入表示最大坐标值)
                     this.mapWidth = parseInt(document.getElementById('mapWidth').value) || this.mapWidth;
                     this.mapHeight = parseInt(document.getElementById('mapHeight').value) || this.mapHeight;
@@ -864,16 +1481,21 @@
                         return;
                     }
 
+                    // 显示加载动画
+                    this.showLoadingIndicator();
+
                     // 计算行列（使用实际像素长度 / 格子尺寸）
                     this.cols = this.actualMapWidth / this.cellSize;
                     this.rows = this.actualMapHeight / this.cellSize;
 
-                    // 生成格子（螺旋）
-                    this.generateCellsSpiral();
-
-                    // 初始化 cell.resources（每次生成都会清空之前的资源分配）
-                    for (const c of this.cells) {
-                        c.resources = []; // 每项为 { type, id, qty }
+                    // 模拟生成过程，带进度更新
+                    try {
+                        await this.generateMapWithProgress();
+                    } catch (error) {
+                        console.error('地图生成失败:', error);
+                        alert('地图生成过程中出现错误，请重试！');
+                    } finally {
+                        this.hideLoadingIndicator();
                     }
 
                     // 计算圈层数（最大圈层）
@@ -1034,13 +1656,28 @@
                         this.ctx.translate(this.mapOffsetX / this.zoom, this.mapOffsetY / this.zoom);
                     }
 
+                    // 根据层级绘制网格线
+                    if (this.showGridLines && this.gridLineLayer === 'bottom') {
+                        this.drawGridLines();
+                    }
+
                     // draw cells
                     for (const cell of this.cells) {
                         this.drawCell(cell, cell === this.selectedCell);
                     }
 
+                    // 根据层级绘制网格线
+                    if (this.showGridLines && this.gridLineLayer === 'top') {
+                        this.drawGridLines();
+                    }
+
                     // draw axis
                     this.drawCoordinateAxis();
+
+                    // 根据层级绘制网格线
+                    if (this.showGridLines && this.gridLineLayer === 'middle') {
+                        this.drawGridLines();
+                    }
 
                     this.ctx.restore();
                 }
@@ -1050,19 +1687,46 @@
 
                     // 判断是否是查找高亮的格子
                     const isSearchHighlighted = this.searchHighlightedCell && this.searchHighlightedCell.id === cell.id;
+                    // 判断是否是悬停的格子
+                    const isHovered = this.hoveredCell && this.hoveredCell.id === cell.id;
+                    // 判断是否是资源分配动画中的格子
+                    const isAnimating = cell.isAnimating;
+                    const animationProgress = cell.animationProgress || 0;
 
-                    // polygon style - 查找高亮用蓝色，手动选择用红色
+                    // 动画时间计算
+                    const now = Date.now();
+                    let hoverAlpha = 0;
+                    if (isHovered && this.hoveredCell) {
+                        const hoverDuration = now - this.hoveredCell.hoverStartTime;
+                        hoverAlpha = Math.min(1, hoverDuration / 200); // 200ms淡入动画
+                    }
+
+                    // polygon style - 查找高亮用蓝色，手动选择用红色，悬停用橙色，资源分配动画用紫色
                     if (isSearchHighlighted) {
                         this.ctx.strokeStyle = '#007bff';  // 蓝色边框
                         this.ctx.lineWidth = 3;  // 更粗的边框
+                    } else if (isAnimating) {
+                        // 资源分配动画：紫色边框，带脉冲效果
+                        const pulseAlpha = 0.3 + Math.sin(animationProgress * Math.PI * 4) * 0.3;
+                        this.ctx.strokeStyle = `rgba(128, 0, 128, ${pulseAlpha})`;
+                        this.ctx.lineWidth = 2 + Math.sin(animationProgress * Math.PI * 4) * 1;
+                    } else if (isHovered) {
+                        this.ctx.strokeStyle = `rgba(255, 140, 0, ${0.5 + hoverAlpha * 0.5})`;  // 橙色边框，带动画
+                        this.ctx.lineWidth = 2 + hoverAlpha;  // 边框粗细动画
                     } else {
                         this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
                         this.ctx.lineWidth = isSelected ? 2 : 1;
                     }
 
-                    // determine fill: search highlight -> blue; selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
+                    // determine fill: search highlight -> blue; hover -> orange; selected -> red; excluded -> yellow; highlighted layer -> green; animating -> purple; otherwise checker
                     if (isSearchHighlighted) {
                         this.ctx.fillStyle = 'rgba(0, 123, 255, 0.3)';  // 蓝色填充
+                    } else if (isAnimating) {
+                        // 资源分配动画：紫色填充，带渐变效果
+                        const fillAlpha = 0.1 + Math.sin(animationProgress * Math.PI * 2) * 0.1;
+                        this.ctx.fillStyle = `rgba(128, 0, 128, ${fillAlpha})`;
+                    } else if (isHovered) {
+                        this.ctx.fillStyle = `rgba(255, 140, 0, ${0.1 + hoverAlpha * 0.2})`;  // 橙色填充，带动画
                     } else if (isSelected) {
                         this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';  // 红色填充
                     } else if (this.excludedCells && this.excludedCells.has(cell.id)) {
@@ -1070,7 +1734,8 @@
                     } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
                         this.ctx.fillStyle = 'rgba(0, 128, 0, 0.25)';
                     } else {
-                        this.ctx.fillStyle = ((row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff');
+                        // 使用格子主题颜色
+                        this.ctx.fillStyle = this.getCellThemeColor(row, col, layer);
                     }
 
                     // draw polygon (coordinates are in map units)
@@ -1171,6 +1836,57 @@
                     this.ctx.restore();
                 }
 
+                // 绘制网格线
+                drawGridLines() {
+                    if (!this.cells || this.cells.length === 0) return;
+
+                    this.ctx.save();
+
+                    // 设置网格线样式
+                    this.ctx.strokeStyle = this.hexToRgba(this.gridLineColor, this.gridLineOpacity);
+                    this.ctx.lineWidth = this.gridLineWidth;
+
+                    // 绘制垂直网格线
+                    for (let x = 0; x <= this.actualMapWidth; x += this.cellSize) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, 0);
+                        this.ctx.lineTo(x, this.actualMapHeight);
+                        this.ctx.stroke();
+                    }
+
+                    // 绘制水平网格线
+                    for (let y = 0; y <= this.actualMapHeight; y += this.cellSize) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, y);
+                        this.ctx.lineTo(this.actualMapWidth, y);
+                        this.ctx.stroke();
+                    }
+
+                    this.ctx.restore();
+                }
+
+                // 辅助方法：将十六进制颜色转换为RGBA
+                hexToRgba(hex, opacity) {
+                    // 如果已经包含rgb，则直接处理透明度
+                    if (hex.startsWith('rgb')) {
+                        return hex.replace('rgb', 'rgba').replace(')', `, ${opacity})`);
+                    }
+
+                    // 处理十六进制颜色
+                    let r = 0, g = 0, b = 0;
+                    if (hex.length === 4) {
+                        r = parseInt(hex[1] + hex[1], 16);
+                        g = parseInt(hex[2] + hex[2], 16);
+                        b = parseInt(hex[3] + hex[3], 16);
+                    } else if (hex.length === 7) {
+                        r = parseInt(hex[1] + hex[2], 16);
+                        g = parseInt(hex[3] + hex[4], 16);
+                        b = parseInt(hex[5] + hex[6], 16);
+                    }
+
+                    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                }
+
                 // helper: map event to map coordinates
                 getEventMapCoordinates(event) {
                     const rect = this.canvas.getBoundingClientRect();
@@ -1230,6 +1946,22 @@
                     const { x, y } = this.getEventMapCoordinates(event);
                     const hovered = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
                     this.canvas.style.cursor = hovered ? 'pointer' : 'crosshair';
+
+                    // 更新悬停格子状态
+                    const previousHovered = this.hoveredCell;
+
+                    if (hovered && (!this.hoveredCell || this.hoveredCell.id !== hovered.id)) {
+                        this.hoveredCell = {
+                            ...hovered,
+                            hoverStartTime: Date.now()
+                        };
+                        // 启动动画循环
+                        this.startAnimationLoop();
+                    } else if (!hovered && this.hoveredCell) {
+                        this.hoveredCell = null;
+                        // 检查是否需要继续动画循环
+                        this.checkAnimationLoop();
+                    }
                 }
 
                 isPointInPolygon(x, y, polygon) {
@@ -1359,6 +2091,13 @@
                     }
                 }
 
+                // 鼠标离开画布处理
+                handleMouseLeave(event) {
+                    this.hoveredCell = null;
+                    this.checkAnimationLoop();
+                    this.canvas.style.cursor = 'crosshair';
+                }
+
                 // 填充圈层选择框
                 updateLayerSelect() {
                     const select = document.getElementById('layerSelect');
@@ -1433,9 +2172,14 @@
                     // 清理数量为0或负数的资源项
                     this.selectedCell.resources = this.selectedCell.resources.filter(r => r.qty > 0);
 
-                    // reflect changes visually and in info panel
-                    this.updateCellInfo(this.selectedCell);
-                    this.drawMap();
+                    // 启动单个格子资源分配动画
+                    this.startSingleCellResourceAnimation(this.selectedCell, () => {
+                        this.updateCellInfo(this.selectedCell);
+                        this.drawMap();
+
+                        // 显示简单成功提示
+                        this.showAnimatedNotification('资源已成功分配到选定格子', 'success', 2500);
+                    });
                 }
 
                 // 将选中的怪物/资源按各自的 qty 添加到被选圈层的格子上
@@ -1505,22 +2249,27 @@
                         cell.resources = cell.resources.filter(r => r.qty > 0);
                     }
 
-                    this.drawMap();
+                    // 启动资源分配动画
+                    this.startResourceAllocationAnimation(targetCells, itemsToApply, () => {
+                        this.drawMap();
 
-                    // 提供信息提示
-                    const addedCount = itemsToApply.filter(it => it.qty > 0).length;
-                    const removedCount = itemsToApply.filter(it => it.qty < 0).length;
-                    let msg = `处理完成：共 ${itemsToApply.length} 项已应用到 ${targetCells.length} 个格子。`;
-                    if (addedCount > 0) {
-                        msg += `\n其中 ${addedCount} 项为添加（正数数量）。`;
-                    }
-                    if (removedCount > 0) {
-                        msg += `\n其中 ${removedCount} 项为移除（负数数量）。`;
-                    }
-                    if (invalidItems > 0) {
-                        msg += `\n有 ${invalidItems} 项因数量无效被跳过。`;
-                    }
-                    alert(msg);
+                        // 提供动画完成提示
+                        const addedCount = itemsToApply.filter(it => it.qty > 0).length;
+                        const removedCount = itemsToApply.filter(it => it.qty < 0).length;
+                        let msg = `处理完成：共 ${itemsToApply.length} 项已应用到 ${targetCells.length} 个格子。`;
+                        if (addedCount > 0) {
+                            msg += `\n其中 ${addedCount} 项为添加（正数数量）。`;
+                        }
+                        if (removedCount > 0) {
+                            msg += `\n其中 ${removedCount} 项为移除（负数数量）。`;
+                        }
+                        if (invalidItems > 0) {
+                            msg += `\n有 ${invalidItems} 项因数量无效被跳过。`;
+                        }
+
+                        // 显示动画完成提示
+                        this.showAnimatedNotification(msg, addedCount > 0 ? 'success' : 'info');
+                    });
                 }
 
                 exportSeparatedData() {
@@ -2045,6 +2794,935 @@
 
                     // 重新绘制地图以清除高亮效果
                     this.drawMap();
+                }
+
+                // === 动画功能 ===
+
+                // 启动动画循环
+                startAnimationLoop() {
+                    if (!this.animationFrame) {
+                        this.animationFrame = requestAnimationFrame(() => this.animate());
+                    }
+                }
+
+                // 检查是否需要继续动画循环
+                checkAnimationLoop() {
+                    const needsAnimation = this.hoveredCell ||
+                        (this.selectedCell && this.selectedCell.animationStartTime) ||
+                        (this.searchHighlightedCell && this.searchHighlightedCell.animationStartTime);
+
+                    if (!needsAnimation && this.animationFrame) {
+                        cancelAnimationFrame(this.animationFrame);
+                        this.animationFrame = null;
+                    }
+                }
+
+                // 动画循环
+                animate() {
+                    this.drawMap();
+
+                    // 检查是否还需要继续动画
+                    this.checkAnimationLoop();
+
+                    if (this.animationFrame) {
+                        this.animationFrame = requestAnimationFrame(() => this.animate());
+                    }
+                }
+
+                // === 加载动画功能 ===
+
+                // 显示加载指示器
+                showLoadingIndicator() {
+                    const indicator = document.getElementById('loadingIndicator');
+                    indicator.style.display = 'block';
+                    indicator.style.animation = 'fadeIn 0.3s ease-out';
+                    this.updateLoadingProgress(0);
+                }
+
+                // 隐藏加载指示器
+                hideLoadingIndicator() {
+                    const indicator = document.getElementById('loadingIndicator');
+                    indicator.style.animation = 'fadeIn 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 300);
+                }
+
+                // 资源分配动画
+                startResourceAllocationAnimation(targetCells, itemsToApply, callback) {
+                    const animationDuration = 1500; // 1.5秒动画时间
+                    const startTime = Date.now();
+
+                    // 为每个目标格子添加动画状态
+                    targetCells.forEach(cell => {
+                        cell.isAnimating = true;
+                        cell.animationStart = startTime;
+                        cell.animationItems = itemsToApply;
+                    });
+
+                    const animate = () => {
+                        const currentTime = Date.now();
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / animationDuration, 1);
+
+                        // 清除之前的动画格子
+                        this.cells.forEach(cell => {
+                            delete cell.isAnimating;
+                            delete cell.animationProgress;
+                        });
+
+                        // 更新当前动画状态
+                        targetCells.forEach((cell, index) => {
+                            const cellProgress = Math.min((elapsed - index * 50) / animationDuration, 1); // 错开动画时间
+                            if (cellProgress > 0) {
+                                cell.isAnimating = true;
+                                cell.animationProgress = cellProgress;
+                            }
+                        });
+
+                        this.drawMap();
+
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            // 动画结束，清理状态
+                            this.cells.forEach(cell => {
+                                delete cell.isAnimating;
+                                delete cell.animationProgress;
+                                delete cell.animationStart;
+                                delete cell.animationItems;
+                            });
+
+                            // 执行回调
+                            if (callback) callback();
+                        }
+                    };
+
+                    animate();
+                }
+
+                // 显示动画通知
+                showAnimatedNotification(message, type = 'info', duration = 4000) {
+                    // 创建通知元素
+                    const notification = document.createElement('div');
+                    notification.className = `notification ${type}`;
+                    notification.innerHTML = `
+                        <div style="margin-bottom: 8px; font-size: 16px; font-weight: 600;">
+                            ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️'}
+                            ${type === 'success' ? '操作成功' : type === 'warning' ? '注意' : type === 'error' ? '错误' : '信息'}
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.4;">${message.replace(/\n/g, '<br>')}</div>
+                    `;
+
+                    // 添加到页面
+                    document.body.appendChild(notification);
+
+                    // 自动隐藏
+                    setTimeout(() => {
+                        notification.classList.add('hiding');
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }, duration);
+                }
+
+                // 单个格子资源分配动画
+                startSingleCellResourceAnimation(cell, callback) {
+                    const animationDuration = 800; // 0.8秒动画时间
+                    const startTime = Date.now();
+
+                    // 为格子添加动画状态
+                    cell.isAnimating = true;
+                    cell.animationStart = startTime;
+
+                    const animate = () => {
+                        const currentTime = Date.now();
+                        const elapsed = currentTime - startTime;
+                        const progress = Math.min(elapsed / animationDuration, 1);
+
+                        // 更新动画进度
+                        cell.animationProgress = progress;
+
+                        this.drawMap();
+
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            // 动画结束，清理状态
+                            delete cell.isAnimating;
+                            delete cell.animationProgress;
+                            delete cell.animationStart;
+
+                            // 执行回调
+                            if (callback) callback();
+                        }
+                    };
+
+                    animate();
+                }
+
+                // 更新加载进度
+                updateLoadingProgress(progress) {
+                    document.getElementById('loadingProgress').textContent = Math.round(progress);
+                    document.getElementById('loadingBar').style.width = `${progress}%`;
+                }
+
+                // 带进度的地图生成
+                async generateMapWithProgress() {
+                    // 清空现有格子
+                    this.cells = [];
+                    let cellId = 1;
+                    const totalCells = Math.ceil(this.rows * this.cols);
+
+                    const layers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+
+                    // 模拟分步骤生成，每10ms更新一次进度
+                    let currentProgress = 0;
+                    const steps = totalCells;
+                    const stepDelay = 5; // 每步5ms
+
+                    for (let layer = 0; layer < layers; layer++) {
+                        const topRow = this.rows - 1 - layer;
+                        const bottomRow = layer;
+                        const leftCol = layer;
+                        const rightCol = this.cols - 1 - layer;
+
+                        // 每生成一个格子，更新进度
+                        const generateCell = (row, col, id) => {
+                            return new Promise(resolve => {
+                                setTimeout(() => {
+                                    const cellSizeMinusOne = this.cellSize - 1;
+                                    const originalCoordinates = [
+                                        [col * this.cellSize, row * this.cellSize],
+                                        [col * this.cellSize, row * this.cellSize + cellSizeMinusOne],
+                                        [col * this.cellSize + cellSizeMinusOne, row * this.cellSize + cellSizeMinusOne],
+                                        [col * this.cellSize + cellSizeMinusOne, row * this.cellSize]
+                                    ];
+
+                                    // 计算该格子的圈层（从0开始）
+                                    const cellLayer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+
+                                    if (this.mapAngle === 0) {
+                                        this.cells.push({
+                                            id, row, col, layer: cellLayer,
+                                            x: col * this.cellSize,
+                                            y: row * this.cellSize,
+                                            coordinates: originalCoordinates,
+                                            originalCoordinates,
+                                            resources: []
+                                        });
+                                    } else {
+                                        const angleRad = this.mapAngle * Math.PI / 180;
+                                        const cosAngle = Math.cos(angleRad);
+                                        const sinAngle = Math.sin(angleRad);
+
+                                        const coordinates = originalCoordinates.map(([x, y]) => {
+                                            const tx = x * cosAngle - y * sinAngle;
+                                            const ty = x * sinAngle + y * cosAngle;
+                                            return [tx, ty];
+                                        });
+
+                                        this.cells.push({
+                                            id, row, col, layer: cellLayer,
+                                            x: col * this.cellSize,
+                                            y: row * this.cellSize,
+                                            coordinates,
+                                            originalCoordinates,
+                                            resources: []
+                                        });
+                                    }
+
+                                    currentProgress++;
+                                    this.updateLoadingProgress((currentProgress / steps) * 100);
+                                    resolve();
+                                }, stepDelay);
+                            });
+                        };
+
+                        // 并发生成当前圈层的格子
+                        const promises = [];
+                        for (let col = leftCol; col <= rightCol; col++) {
+                            promises.push(generateCell(bottomRow, col, cellId++));
+                        }
+                        for (let row = bottomRow + 1; row <= topRow; row++) {
+                            promises.push(generateCell(row, rightCol, cellId++));
+                        }
+                        for (let col = rightCol - 1; col >= leftCol; col--) {
+                            promises.push(generateCell(topRow, col, cellId++));
+                        }
+                        for (let row = topRow - 1; row > bottomRow; row--) {
+                            promises.push(generateCell(row, leftCol, cellId++));
+                        }
+
+                        await Promise.all(promises);
+                    }
+
+                    // 生成完成后，确保进度为100%
+                    this.updateLoadingProgress(100);
+
+                    // 初始化 cell.resources（每次生成都会清空之前的资源分配）
+                    for (const c of this.cells) {
+                        c.resources = []; // 每项为 { type, id, qty }
+                    }
+                }
+
+                // ========== 资源预览和分析功能 ==========
+
+                // 资源预览功能
+                previewResources() {
+                    if (!this.cells || this.cells.length === 0) {
+                        this.showAnimatedNotification('请先生成地图', 'warning', 3000);
+                        return;
+                    }
+
+                    // 显示预览面板
+                    document.getElementById('resourcePreviewPanel').style.display = 'block';
+                    document.getElementById('conflictDetectionPanel').style.display = 'none';
+                    document.getElementById('advancedStatsPanel').style.display = 'none';
+
+                    // 生成密度热力图
+                    this.generateDensityMap();
+
+                    // 生成优化建议
+                    this.generateOptimizationSuggestions();
+
+                    this.showAnimatedNotification('资源预览已生成', 'success', 2500);
+                }
+
+                // 生成密度热力图
+                generateDensityMap() {
+                    const container = document.getElementById('densityMapContainer');
+
+                    // 获取当前选择的资源类型筛选器
+                    const selectedFilter = document.querySelector('input[name="heatmapFilter"]:checked').value;
+
+                    // 根据筛选器类型过滤资源
+                    const filteredCells = this.cells.map(cell => {
+                        let filteredResources = cell.resources;
+                        if (selectedFilter !== 'all') {
+                            const filterType = parseInt(selectedFilter);
+                            filteredResources = cell.resources.filter(r => r.type === filterType);
+                        }
+                        return {
+                            ...cell,
+                            filteredResources: filteredResources,
+                            density: filteredResources.reduce((sum, r) => sum + r.qty, 0)
+                        };
+                    });
+
+                    // 计算最大密度
+                    const maxDensity = filteredCells.reduce((max, cell) => {
+                        return Math.max(max, cell.density);
+                    }, 1);
+
+                    // 更新图例说明
+                    const legendText = selectedFilter === 'all' ? '所有资源' :
+                                       selectedFilter === '1' ? '怪物' :
+                                       selectedFilter === '2' ? '资源' : '联盟资源';
+                    document.getElementById('heatmapLegend').textContent = `${legendText} 密度: 低 → 高`;
+
+                    // 创建热力图
+                    let heatmapHTML = '<div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: 100%; height: 100%;">';
+
+                    const sampleSize = Math.min(64, filteredCells.length); // 最多显示64个格子
+                    const step = Math.floor(filteredCells.length / sampleSize);
+
+                    for (let i = 0; i < filteredCells.length && i < sampleSize * step; i += step) {
+                        const cell = filteredCells[i];
+                        const density = cell.density;
+                        const intensity = density / maxDensity;
+
+                        // 根据密度生成颜色 - 使用不同的色彩方案区分资源类型
+                        let color;
+                        if (intensity === 0) {
+                            color = '#f8f9fa'; // 灰白色 - 无资源
+                        } else {
+                            // 根据资源类型使用不同的基础颜色
+                            if (selectedFilter === '1') { // 怪物 - 红色系
+                                if (intensity < 0.3) color = '#f8d7da';
+                                else if (intensity < 0.6) color = '#f5c6cb';
+                                else if (intensity < 0.8) color = '#f1b0b7';
+                                else color = '#dc3545';
+                            } else if (selectedFilter === '2') { // 资源 - 蓝色系
+                                if (intensity < 0.3) color = '#d1ecf1';
+                                else if (intensity < 0.6) color = '#bee5eb';
+                                else if (intensity < 0.8) color = '#abdde5';
+                                else color = '#0c5460';
+                            } else if (selectedFilter === '3') { // 联盟资源 - 绿色系
+                                if (intensity < 0.3) color = '#d4edda';
+                                else if (intensity < 0.6) color = '#c3e6cb';
+                                else if (intensity < 0.8) color = '#b1dfbb';
+                                else color = '#155724';
+                            } else { // 所有资源 - 混合色系
+                                if (intensity < 0.3) color = '#d4edda';
+                                else if (intensity < 0.6) color = '#fff3cd';
+                                else if (intensity < 0.8) color = '#f8d7da';
+                                else color = '#dc3545';
+                            }
+                        }
+
+                        const resourceTypeText = selectedFilter === 'all' ? '资源' :
+                                              selectedFilter === '1' ? '怪物' :
+                                              selectedFilter === '2' ? '资源' : '联盟资源';
+                        heatmapHTML += `<div style="background: ${color}; border-radius: 2px; cursor: pointer;" title="格子${cell.id}: ${density}个${resourceTypeText}"></div>`;
+                    }
+
+                    heatmapHTML += '</div>';
+                    container.innerHTML = heatmapHTML;
+                }
+
+                // 生成优化建议
+                generateOptimizationSuggestions() {
+                    const suggestions = [];
+
+                    // 分析资源分布
+                    const totalResources = this.cells.reduce((sum, cell) => {
+                        return sum + cell.resources.reduce((rSum, r) => rSum + r.qty, 0);
+                    }, 0);
+
+                    const occupiedCells = this.cells.filter(cell => cell.resources.length > 0).length;
+                    const emptyCells = this.cells.length - occupiedCells;
+
+                    if (emptyCells > this.cells.length * 0.7) {
+                        suggestions.push('🎯 建议：当前有70%以上的格子为空，可以考虑增加资源分布密度');
+                    }
+
+                    if (totalResources > 0 && occupiedCells > 0) {
+                        const avgResourcesPerCell = totalResources / occupiedCells;
+                        if (avgResourcesPerCell > 5) {
+                            suggestions.push('⚖️ 建议：部分格子资源过于集中，建议分散分布以提升覆盖范围');
+                        }
+                    }
+
+                    // 分析圈层分布
+                    const layerDistribution = {};
+                    this.cells.forEach(cell => {
+                        if (cell.resources.length > 0) {
+                            layerDistribution[cell.layer] = (layerDistribution[cell.layer] || 0) + cell.resources.length;
+                        }
+                    });
+
+                    const layerCounts = Object.values(layerDistribution);
+                    if (layerCounts.length > 1) {
+                        const maxLayer = Math.max(...layerCounts);
+                        const minLayer = Math.min(...layerCounts);
+                        if (maxLayer > minLayer * 3) {
+                            suggestions.push('🔄 建议：资源在圈层间分布不均衡，建议调整各圈层的资源分配');
+                        }
+                    }
+
+                    if (suggestions.length === 0) {
+                        suggestions.push('✅ 当前资源分布较为合理，无需特别调整');
+                    }
+
+                    document.getElementById('optimizationSuggestions').innerHTML = suggestions.join('<br>');
+                }
+
+                // 冲突检测功能
+                detectResourceConflicts() {
+                    if (!this.cells || this.cells.length === 0) {
+                        this.showAnimatedNotification('请先生成地图', 'warning', 3000);
+                        return;
+                    }
+
+                    // 显示冲突检测面板
+                    document.getElementById('conflictDetectionPanel').style.display = 'block';
+                    document.getElementById('resourcePreviewPanel').style.display = 'none';
+                    document.getElementById('advancedStatsPanel').style.display = 'none';
+
+                    const conflicts = this.analyzeConflicts();
+                    this.displayConflictReport(conflicts);
+
+                    this.showAnimatedNotification(`检测完成，发现${conflicts.length}个潜在冲突`, conflicts.length > 0 ? 'warning' : 'success', 3000);
+                }
+
+                // 分析资源冲突
+                analyzeConflicts() {
+                    const conflicts = [];
+
+                    // 检查重复资源分配
+                    const resourceMap = new Map();
+                    this.cells.forEach(cell => {
+                        cell.resources.forEach(resource => {
+                            const key = `${cell.id}_${resource.type}_${resource.id}`;
+                            if (resourceMap.has(key)) {
+                                conflicts.push({
+                                    type: '重复分配',
+                                    cellId: cell.id,
+                                    resourceId: resource.id,
+                                    description: `格子${cell.id}中资源${resource.id}被重复分配`
+                                });
+                            } else {
+                                resourceMap.set(key, { cell, resource });
+                            }
+                        });
+                    });
+
+                    // 检查数量异常
+                    this.cells.forEach(cell => {
+                        cell.resources.forEach(resource => {
+                            if (resource.qty <= 0) {
+                                conflicts.push({
+                                    type: '数量异常',
+                                    cellId: cell.id,
+                                    resourceId: resource.id,
+                                    description: `格子${cell.id}中资源${resource.id}数量为${resource.qty}，可能存在问题`
+                                });
+                            }
+                        });
+                    });
+
+                    // 检查资源密度过高
+                    this.cells.forEach(cell => {
+                        const totalQty = cell.resources.reduce((sum, r) => sum + r.qty, 0);
+                        if (totalQty > 20) {
+                            conflicts.push({
+                                type: '密度过高',
+                                cellId: cell.id,
+                                resourceId: 'multiple',
+                                description: `格子${cell.id}资源总量过高(${totalQty})，可能影响性能`
+                            });
+                        }
+                    });
+
+                    return conflicts;
+                }
+
+                // 显示冲突报告
+                displayConflictReport(conflicts) {
+                    const reportElement = document.getElementById('conflictReport');
+
+                    if (conflicts.length === 0) {
+                        reportElement.innerHTML = '✅ 未发现资源冲突，资源配置良好！';
+                        return;
+                    }
+
+                    // 按类型分组冲突
+                    const conflictsByType = {};
+                    conflicts.forEach(conflict => {
+                        if (!conflictsByType[conflict.type]) {
+                            conflictsByType[conflict.type] = [];
+                        }
+                        conflictsByType[conflict.type].push(conflict);
+                    });
+
+                    let reportHTML = `<strong>发现 ${conflicts.length} 个潜在冲突：</strong><br><br>`;
+
+                    Object.entries(conflictsByType).forEach(([type, typeConflicts]) => {
+                        reportHTML += `<strong>${type} (${typeConflicts.length}个):</strong><br>`;
+                        typeConflicts.slice(0, 3).forEach(conflict => {
+                            reportHTML += `• ${conflict.description}<br>`;
+                        });
+                        if (typeConflicts.length > 3) {
+                            reportHTML += `• ... 还有${typeConflicts.length - 3}个类似问题<br>`;
+                        }
+                        reportHTML += '<br>';
+                    });
+
+                    reportElement.innerHTML = reportHTML;
+                }
+
+                // 高级统计功能
+                showAdvancedStatistics() {
+                    if (!this.cells || this.cells.length === 0) {
+                        this.showAnimatedNotification('请先生成地图', 'warning', 3000);
+                        return;
+                    }
+
+                    // 显示高级统计面板
+                    document.getElementById('advancedStatsPanel').style.display = 'block';
+                    document.getElementById('resourcePreviewPanel').style.display = 'none';
+                    document.getElementById('conflictDetectionPanel').style.display = 'none';
+
+                    // 生成详细统计
+                    this.generateDetailedStats();
+
+                    // 生成可视化图表
+                    this.generateVisualizationChart();
+
+                    // 生成圈层分析
+                    this.generateLayerAnalysis();
+
+                    this.showAnimatedNotification('高级统计报告已生成', 'success', 2500);
+                }
+
+                // 生成详细统计
+                generateDetailedStats() {
+                    const stats = {
+                        totalCells: this.cells.length,
+                        occupiedCells: this.cells.filter(cell => cell.resources.length > 0).length,
+                        totalResources: 0,
+                        resourceTypes: {},
+                        layerStats: {}
+                    };
+
+                    this.cells.forEach(cell => {
+                        // 统计资源
+                        cell.resources.forEach(resource => {
+                            stats.totalResources += resource.qty;
+
+                            const typeKey = resource.type === 1 ? '怪物' : '资源';
+                            if (!stats.resourceTypes[typeKey]) {
+                                stats.resourceTypes[typeKey] = { count: 0, quantity: 0 };
+                            }
+                            stats.resourceTypes[typeKey].count++;
+                            stats.resourceTypes[typeKey].quantity += resource.qty;
+                        });
+
+                        // 统计圈层
+                        const layer = cell.layer;
+                        if (!stats.layerStats[layer]) {
+                            stats.layerStats[layer] = { cells: 0, resources: 0 };
+                        }
+                        if (cell.resources.length > 0) {
+                            stats.layerStats[layer].cells++;
+                            stats.layerStats[layer].resources += cell.resources.reduce((sum, r) => sum + r.qty, 0);
+                        }
+                    });
+
+                    // 生成统计报告HTML
+                    let statsHTML = `
+                        <strong>📊 基础统计：</strong><br>
+                        • 总格子数：${stats.totalCells}<br>
+                        • 已占用格子：${stats.occupiedCells} (${(stats.occupiedCells/stats.totalCells*100).toFixed(1)}%)<br>
+                        • 总资源数量：${stats.totalResources}<br><br>
+
+                        <strong>📦 资源类型分布：</strong><br>
+                    `;
+
+                    Object.entries(stats.resourceTypes).forEach(([type, data]) => {
+                        statsHTML += `• ${type}：${data.count}种，共${data.quantity}个<br>`;
+                    });
+
+                    statsHTML += `<br><strong>🎯 分布密度：</strong><br>`;
+                    if (stats.occupiedCells > 0) {
+                        const avgDensity = (stats.totalResources / stats.occupiedCells).toFixed(2);
+                        statsHTML += `• 平均密度：${avgDensity} 个资源/格子<br>`;
+                    }
+
+                    document.getElementById('detailedStats').innerHTML = statsHTML;
+                }
+
+                // 生成可视化图表
+                generateVisualizationChart() {
+                    const canvas = document.getElementById('statsChart');
+                    const placeholder = document.getElementById('chartPlaceholder');
+
+                    // 统计资源类型分布
+                    const resourceStats = { 怪物: 0, 资源: 0 };
+                    this.cells.forEach(cell => {
+                        cell.resources.forEach(resource => {
+                            const type = resource.type === 1 ? '怪物' : '资源';
+                            resourceStats[type] += resource.qty;
+                        });
+                    });
+
+                    // 显示canvas，隐藏placeholder
+                    canvas.style.display = 'block';
+                    placeholder.style.display = 'none';
+
+                    // 绘制简单的柱状图
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+
+                    const data = Object.entries(resourceStats);
+                    const maxValue = Math.max(...data.map(d => d[1]), 1);
+                    const barWidth = canvas.width / (data.length * 2);
+                    const barSpacing = barWidth;
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    data.forEach(([label, value], index) => {
+                        const barHeight = (value / maxValue) * (canvas.height - 30);
+                        const x = barSpacing + index * (barWidth + barSpacing);
+                        const y = canvas.height - barHeight - 20;
+
+                        // 绘制柱子
+                        ctx.fillStyle = label === '怪物' ? '#ff6b6b' : '#4ecdc4';
+                        ctx.fillRect(x, y, barWidth, barHeight);
+
+                        // 绘制标签
+                        ctx.fillStyle = '#333';
+                        ctx.font = '12px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(label, x + barWidth/2, canvas.height - 5);
+                        ctx.fillText(value, x + barWidth/2, y - 5);
+                    });
+                }
+
+                // 生成圈层分析
+                generateLayerAnalysis() {
+                    const layerStats = {};
+                    const maxLayer = Math.max(...this.cells.map(c => c.layer));
+
+                    for (let i = 0; i <= maxLayer; i++) {
+                        layerStats[i] = { cells: 0, resources: 0 };
+                    }
+
+                    this.cells.forEach(cell => {
+                        layerStats[cell.layer].cells++;
+                        layerStats[cell.layer].resources += cell.resources.reduce((sum, r) => sum + r.qty, 0);
+                    });
+
+                    let analysisHTML = '<strong>📊 各圈层资源分布：</strong><br>';
+                    Object.entries(layerStats).forEach(([layer, stats]) => {
+                        const totalResources = Object.values(layerStats).reduce((sum, s) => sum + s.resources, 0);
+                        const percentage = totalResources > 0 ? ((stats.resources / totalResources) * 100).toFixed(1) : 0;
+                        analysisHTML += `• 圈层${layer}：${stats.resources}个资源 (${percentage}%)<br>`;
+                    });
+
+                    document.getElementById('layerAnalysis').innerHTML = analysisHTML;
+                }
+
+                // 自动解决冲突
+                autoResolveConflicts() {
+                    const conflicts = this.analyzeConflicts();
+                    let resolvedCount = 0;
+
+                    conflicts.forEach(conflict => {
+                        if (conflict.type === '重复分配') {
+                            // 移除重复的资源
+                            const cell = this.cells.find(c => c.id === conflict.cellId);
+                            if (cell) {
+                                cell.resources = cell.resources.filter(r =>
+                                    !(r.type.toString() === conflict.resourceId.split('_')[0] &&
+                                      r.id.toString() === conflict.resourceId.split('_')[1])
+                                );
+                                resolvedCount++;
+                            }
+                        } else if (conflict.type === '数量异常') {
+                            // 移除数量异常的资源
+                            const cell = this.cells.find(c => c.id === conflict.cellId);
+                            if (cell) {
+                                cell.resources = cell.resources.filter(r => r.qty > 0);
+                                resolvedCount++;
+                            }
+                        }
+                    });
+
+                    this.drawMap();
+                    this.detectResourceConflicts(); // 重新检测
+                    this.showAnimatedNotification(`已自动解决${resolvedCount}个冲突`, 'success', 3000);
+                }
+
+                // 手动调整模式
+                startManualAdjustment() {
+                    this.showAnimatedNotification('手动调整模式：点击地图上的格子进行编辑', 'info', 4000);
+                    // 这里可以添加更多手动调整的逻辑
+                }
+
+                // 导出详细报告
+                exportDetailedReport() {
+                    const report = this.generateDetailedReport();
+                    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `资源分析报告_${new Date().toISOString().slice(0,10)}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    this.showAnimatedNotification('详细报告已导出', 'success', 2500);
+                }
+
+                // 生成详细报告内容
+                generateDetailedReport() {
+                    const timestamp = new Date().toLocaleString('zh-CN');
+
+                    let report = `资源分析报告\n生成时间：${timestamp}\n${'='.repeat(50)}\n\n`;
+
+                    // 基础统计
+                    const totalCells = this.cells.length;
+                    const occupiedCells = this.cells.filter(cell => cell.resources.length > 0).length;
+                    const totalResources = this.cells.reduce((sum, cell) =>
+                        sum + cell.resources.reduce((rSum, r) => rSum + r.qty, 0), 0);
+
+                    report += `基础统计\n${'-'.repeat(20)}\n`;
+                    report += `总格子数：${totalCells}\n`;
+                    report += `已占用格子：${occupiedCells} (${(occupiedCells/totalCells*100).toFixed(1)}%)\n`;
+                    report += `总资源数量：${totalResources}\n\n`;
+
+                    // 资源类型统计
+                    const resourceTypes = { 怪物: 0, 资源: 0 };
+                    this.cells.forEach(cell => {
+                        cell.resources.forEach(resource => {
+                            const type = resource.type === 1 ? '怪物' : '资源';
+                            resourceTypes[type] += resource.qty;
+                        });
+                    });
+
+                    report += `资源类型分布\n${'-'.repeat(20)}\n`;
+                    Object.entries(resourceTypes).forEach(([type, count]) => {
+                        report += `${type}：${count}个\n`;
+                    });
+                    report += '\n';
+
+                    // 圈层分析
+                    const layerStats = {};
+                    this.cells.forEach(cell => {
+                        if (!layerStats[cell.layer]) {
+                            layerStats[cell.layer] = { cells: 0, resources: 0 };
+                        }
+                        if (cell.resources.length > 0) {
+                            layerStats[cell.layer].cells++;
+                            layerStats[cell.layer].resources += cell.resources.reduce((sum, r) => sum + r.qty, 0);
+                        }
+                    });
+
+                    report += `圈层分布分析\n${'-'.repeat(20)}\n`;
+                    Object.entries(layerStats)
+                        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                        .forEach(([layer, stats]) => {
+                            report += `圈层${layer}：${stats.cells}个格子，${stats.resources}个资源\n`;
+                        });
+
+                    // 冲突检测
+                    const conflicts = this.analyzeConflicts();
+                    report += `\n冲突检测结果\n${'-'.repeat(20)}\n`;
+                    if (conflicts.length === 0) {
+                        report += '✅ 未发现冲突\n';
+                    } else {
+                        report += `发现${conflicts.length}个潜在冲突：\n`;
+                        conflicts.forEach((conflict, index) => {
+                            report += `${index + 1}. ${conflict.description}\n`;
+                        });
+                    }
+
+                    return report;
+                }
+
+                // ========== 主题相关功能 ==========
+
+                // 切换界面主题
+                switchUITheme(theme) {
+                    // 移除所有主题类
+                    document.body.classList.remove('light-theme', 'dark-theme');
+
+                    // 添加新主题类
+                    if (theme !== 'light') {
+                        document.body.classList.add(`${theme}-theme`);
+                    }
+
+                    this.currentUITheme = theme;
+                    this.saveThemeSettings(); // 保存设置
+                    this.showAnimatedNotification(`已切换到${theme === 'light' ? '浅色' : '深色'}主题`, 'success', 2000);
+                }
+
+                // 切换格子颜色主题
+                switchCellTheme(theme) {
+                    this.currentCellTheme = theme;
+
+                    // 如果切换到自定义主题，选择对应的radio按钮
+                    if (theme === 'custom') {
+                        document.querySelector('input[name="cellTheme"][value="custom"]').checked = true;
+                    }
+
+                    this.drawMap();
+                    this.saveThemeSettings(); // 保存设置
+                    this.showAnimatedNotification(`已切换到${this.getThemeDisplayName(theme)}`, 'success', 2000);
+                }
+
+                // 获取格子主题颜色
+                getCellThemeColor(row, col, layer) {
+                    switch (this.currentCellTheme) {
+                        case 'default':
+                            return ((row + col) % 2 === 0 ? this.cellThemes.default.odd : this.cellThemes.default.even);
+
+  
+                        case 'spring':
+                            return ((row + col) % 2 === 0 ? this.cellThemes.spring.odd : this.cellThemes.spring.even);
+
+                        case 'summer':
+                            return ((row + col) % 2 === 0 ? this.cellThemes.summer.odd : this.cellThemes.summer.even);
+
+                        case 'autumn':
+                            return ((row + col) % 2 === 0 ? this.cellThemes.autumn.odd : this.cellThemes.autumn.even);
+
+                        case 'winter':
+                            return ((row + col) % 2 === 0 ? this.cellThemes.winter.odd : this.cellThemes.winter.even);
+
+    
+                        default:
+                            return '#ffffff';
+                    }
+                }
+
+                // 获取主题显示名称
+                getThemeDisplayName(theme) {
+                    const themeNames = {
+                        'default': '默认配色',
+                        'spring': '春季主题',
+                        'summer': '夏季主题',
+                        'autumn': '秋季主题',
+                        'winter': '冬季主题'
+                    };
+                    return themeNames[theme] || theme;
+                }
+
+  
+                // 预设主题快速切换方法
+                applyPresetTheme(presetName) {
+                    const presets = {
+                        'nature': {
+                            cellTheme: 'spring',
+                            uiTheme: 'light'
+                        },
+                        'night': {
+                            cellTheme: 'game',
+                            uiTheme: 'dark'
+                        },
+                        'accessibility': {
+                            cellTheme: 'high-contrast',
+                            uiTheme: 'high-contrast'
+                        }
+                    };
+
+                    if (presets[presetName]) {
+                        const preset = presets[presetName];
+                        this.switchUITheme(preset.uiTheme);
+                        this.switchCellTheme(preset.cellTheme);
+
+                        // 更新UI选择器
+                        document.querySelector(`input[name="uiTheme"][value="${preset.uiTheme}"]`).checked = true;
+                        document.querySelector(`input[name="cellTheme"][value="${preset.cellTheme}"]`).checked = true;
+
+                        this.showAnimatedNotification(`已应用${presetName}预设主题`, 'success', 2000);
+                    }
+                }
+
+                // 保存主题设置到本地存储
+                saveThemeSettings() {
+                    const settings = {
+                        uiTheme: this.currentUITheme,
+                        cellTheme: this.currentCellTheme
+                    };
+                    localStorage.setItem('mapThemeSettings', JSON.stringify(settings));
+                }
+
+                // 从本地存储加载主题设置
+                loadThemeSettings() {
+                    try {
+                        const saved = localStorage.getItem('mapThemeSettings');
+                        if (saved) {
+                            const settings = JSON.parse(saved);
+                            this.currentUITheme = settings.uiTheme || 'light';
+                            this.currentCellTheme = settings.cellTheme || 'default';
+
+                            // 应用保存的主题
+                            this.switchUITheme(this.currentUITheme);
+                            this.switchCellTheme(this.currentCellTheme);
+
+                            // 更新UI选择器
+                            document.querySelector(`input[name="uiTheme"][value="${this.currentUITheme}"]`).checked = true;
+                            document.querySelector(`input[name="cellTheme"][value="${this.currentCellTheme}"]`).checked = true;
+
+                                        }
+                    } catch (error) {
+                        console.warn('无法加载主题设置:', error);
+                    }
                 }
             }
 
