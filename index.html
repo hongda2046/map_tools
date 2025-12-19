@@ -28,12 +28,12 @@
                 padding: 20px;
             }
 
-            /* 三列布局：左、 中、 右 */
+            /* 四列布局：左、中左、中右、右 */
             .container {
                 display: grid;
-                grid-template-columns: var(--new-control-width) var(--new-control-width) 1fr;
+                grid-template-columns: var(--new-control-width) var(--new-control-width) 1fr var(--new-control-width);
                 gap: 20px;
-                max-width: 1400px;
+                max-width: 1600px;
                 width: 100%;
                 align-items: start;
             }
@@ -49,6 +49,16 @@
 
             .layer-panel {
                 /* 第二列容器 */
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .alliance-panel {
+                /* 第四列容器 */
                 background: white;
                 padding: 20px;
                 border-radius: 10px;
@@ -278,6 +288,16 @@
             }
 
             /* responsive: single column on narrow screens */
+            @media (max-width: 1400px) {
+                .container {
+                    grid-template-columns: var(--new-control-width) 1fr;
+                }
+
+                .alliance-panel {
+                    grid-column: span 2;
+                }
+            }
+
             @media (max-width: 900px) {
                 .container {
                     grid-template-columns: 1fr;
@@ -334,69 +354,15 @@
                 <div class="info-panel">
                     <h3>格子信息</h3>
                     <p id="cellInfo">点击格子查看详细信息</p>
-                </div>
 
-                <!-- 联盟资源控制区域 -->
-                <div class="alliance-panel" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">联盟资源配置</h3>
-
-                    <!-- 剔除功能按钮 -->
-                    <div style="margin-bottom: 15px;">
-                        <button id="excludeBtn"
-                            style="background: #ffc107; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                            剔除格子
-                        </button>
-                        <button id="clearExcludeBtn"
-                            style="background: #6c757d; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 8px;">
-                            清除剔除
-                        </button>
-                    </div>
-
-                    <!-- 联盟资源数量输入 -->
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                        <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
-                        <div class="input-group">
-                            <label for="allianceFarm">联盟农场数量：</label>
-                            <input type="number" id="allianceFarm" value="0" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label for="allianceWood">联盟伐木厂数量：</label>
-                            <input type="number" id="allianceWood" value="0" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label for="allianceMine">联盟煤矿厂数量：</label>
-                            <input type="number" id="allianceMine" value="0" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label for="allianceIron">联盟铁矿厂数量：</label>
-                            <input type="number" id="allianceIron" value="0" min="0">
-                        </div>
-                    </div>
-
-                    <!-- 资源半径限制 -->
-                    <div class="input-group">
-                        <label for="resourceRadius">资源半径限制（像素）：</label>
-                        <input type="number" id="resourceRadius" value="150" min="0">
-                        <small class="input-hint">0=无限制，150=150像素内不能生成相同资源</small>
-                    </div>
-
-                    <!-- 生成联盟资源按钮 -->
-                    <div class="button-group" style="margin-top: 15px;">
-                        <button id="generateAllianceBtn" style="background: #28a745; color: #fff;">
-                            生成资源
-                        </button>
-                        <button id="clearAllianceBtn" style="background: #dc3545; color: #fff;">
-                            清除资源
-                        </button>
-                    </div>
-
-                    <!-- 资源统计显示 -->
-                    <div id="resourceStats"
-                        style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
-                        <div id="statsContent"></div>
+                    <!-- 格子内资源点坐标显示 -->
+                    <div id="cellResourceCoords" style="margin-top: 15px; display: none;">
+                        <h4 style="margin: 10px 0 5px 0; color: #333; font-size: 14px;">格子内资源坐标：</h4>
+                        <div id="resourceCoordsList" style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
                     </div>
                 </div>
-            </div>
+
+                            </div>
 
             <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
             <div class="layer-panel">
@@ -449,6 +415,67 @@
             <!-- 第3列：画布 -->
             <div class="canvas-container">
                 <canvas id="mapCanvas"></canvas>
+            </div>
+
+            <!-- 第4列：联盟资源配置 -->
+            <div class="alliance-panel">
+                <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">联盟资源配置</h3>
+
+                <!-- 剔除功能按钮 -->
+                <div style="margin-bottom: 15px;">
+                    <button id="excludeBtn"
+                        style="background: #ffc107; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; width: 100%; margin-bottom: 8px;">
+                        点击剔除格子（激活后单击格子标黄）
+                    </button>
+                    <button id="clearExcludeBtn"
+                        style="background: #6c757d; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; width: 100%;">
+                        清除剔除
+                    </button>
+                </div>
+
+                <!-- 联盟资源数量输入 -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
+                    <div class="input-group">
+                        <label for="allianceFarm">联盟农场数量：</label>
+                        <input type="number" id="allianceFarm" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceWood">联盟伐木厂数量：</label>
+                        <input type="number" id="allianceWood" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceMine">联盟煤矿厂数量：</label>
+                        <input type="number" id="allianceMine" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label for="allianceIron">联盟铁矿厂数量：</label>
+                        <input type="number" id="allianceIron" value="0" min="0">
+                    </div>
+                </div>
+
+                <!-- 资源半径限制 -->
+                <div class="input-group">
+                    <label for="resourceRadius">资源半径限制（像素）：</label>
+                    <input type="number" id="resourceRadius" value="150" min="0">
+                    <small class="input-hint">0=无限制，150=150像素内不能生成相同资源</small>
+                </div>
+
+                <!-- 生成联盟资源按钮 -->
+                <div class="button-group" style="margin-top: 15px;">
+                    <button id="generateAllianceBtn" style="background: #28a745; color: #fff;">
+                        生成资源
+                    </button>
+                    <button id="clearAllianceBtn" style="background: #dc3545; color: #fff;">
+                        清除资源
+                    </button>
+                </div>
+
+                <!-- 资源统计显示 -->
+                <div id="resourceStats"
+                    style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
+                    <div id="statsContent"></div>
+                </div>
             </div>
         </div>
 
@@ -1179,6 +1206,46 @@
 					${coordText}
 					${resHtml}
 				`;
+
+                // 更新格子内联盟资源坐标显示
+                this.updateCellResourceCoords(cell);
+                }
+
+                // 更新格子内联盟资源坐标显示
+                updateCellResourceCoords(cell) {
+                    const resourceCoordsDiv = document.getElementById('cellResourceCoords');
+                    const resourceCoordsList = document.getElementById('resourceCoordsList');
+
+                    if (cell.allianceResources && cell.allianceResources.length > 0) {
+                        let coordsHtml = '';
+
+                        // 资源名称映射
+                        const resourceNames = {
+                            5001: '联盟农场',
+                            5002: '联盟伐木厂',
+                            5003: '联盟煤矿厂',
+                            5004: '联盟铁矿厂'
+                        };
+
+                        // 按资源类型分组显示坐标
+                        for (const resource of cell.allianceResources) {
+                            const resourceName = resourceNames[resource.id] || `资源${resource.id}`;
+                            coordsHtml += `<strong style="color: #333;">${resourceName}：</strong><br>`;
+
+                            // 显示每个坐标点
+                            for (const coord of resource.coordinates) {
+                                coordsHtml += `${coord.x};${coord.y}<br>`;
+                            }
+
+                            // 添加空行分隔不同资源类型
+                            coordsHtml += '<br>';
+                        }
+
+                        resourceCoordsList.innerHTML = coordsHtml.trim();
+                        resourceCoordsDiv.style.display = 'block';
+                    } else {
+                        resourceCoordsDiv.style.display = 'none';
+                    }
                 }
 
                 changeZoom(delta) {
