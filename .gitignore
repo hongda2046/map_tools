@@ -28,3 +28,6 @@ index - Copy.html
 
 # 其他不需要版本控制的文件
 *.xlsx
+
+# Claude 本地配置文件
+.claude/
