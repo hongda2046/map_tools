@@ -1,1162 +1,1177 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地图格子生成工具</title>
-    <style>
-        :root{
-            --old-control-width: 320px;
-            --new-control-width: calc(var(--old-control-width) * 0.8); /* 80% of previous */
-        }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>地图格子生成工具</title>
+        <style>
+            :root {
+                --old-control-width: 320px;
+                --new-control-width: calc(var(--old-control-width) * 0.8);
+                /* 80% of previous */
+            }
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-        }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        /* 三列布局：左、 中、 右 */
-        .container {
-            display: grid;
-            grid-template-columns: var(--new-control-width) var(--new-control-width) 1fr;
-            gap: 20px;
-            max-width: 1400px;
-            width: 100%;
-            align-items: start;
-        }
+            body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f0f0f0;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                min-height: 100vh;
+                padding: 20px;
+            }
 
-        .controls {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 100%;
-        }
-
-        .layer-panel {
-            /* 第二列容器 */
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 100%;
-        }
-
-        .controls h1, .layer-panel h1 {
-            font-size: 20px;
-            margin-bottom: 12px;
-            color: #333;
-            text-align: center;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .input-hint {
-            display: block;
-            margin-top: 3px;
-            font-size: 11px;
-            color: #888;
-        }
-
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-
-        #generateBtn {
-            background-color: #007bff;
-            color: white;
-            grid-column: span 2;
-        }
-
-        #generateBtn:hover {
-            background-color: #0056b3;
-        }
-
-        #zoomInBtn, #zoomOutBtn {
-            background-color: #28a745;
-            color: white;
-        }
-
-        #zoomInBtn:hover, #zoomOutBtn:hover {
-            background-color: #1e7e34;
-        }
-
-        #printBtn {
-            background-color: #dc3545;
-            color: white;
-            grid-column: span 2;
-        }
-
-        #printBtn:hover {
-            background-color: #c82333;
-        }
-
-        .info-panel {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-            margin-bottom: 12px;
-        }
-
-        .info-panel h3 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        #cellInfo {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .preset-btn {
-            padding: 5px 8px;
-            font-size: 12px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: #495057;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .preset-btn:hover {
-            background-color: #e9ecef;
-            border-color: #adb5bd;
-        }
-
-        .preset-btn.active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-
-        .layer-controls {
-            background-color: transparent;
-            padding: 0;
-            border-radius: 4px;
-        }
-
-        .layer-controls label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #333;
-            font-size: 13px;
-        }
-
-        #layerSelect {
-            width: 100%;
-            height: 120px;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 8px;
-            box-sizing: border-box;
-        }
-
-        #monsterSelect, #resourceSelect {
-            width: 100%;
-            height: 130px;
-            padding: 6px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-            margin-bottom: 6px;
-            box-sizing: border-box;
-        }
-
-        #highlightBtn {
-            background-color: #20c997;
-            color: white;
-            margin-right: 8px;
-        }
-
-        #clearHighlightBtn {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        #applyMonsterBtn {
-            background-color: #e67e22;
-            color: white;
-            margin-top: 6px;
-        }
-		
-		#applyMonsterToCellBtn {
-            background-color: #8B814C;
-            color: white;
-            margin-top: 6px;
-        }
-
-        #applyResourceBtn {
-            background-color: #17a2b8;
-            color: white;
-            margin-top: 6px;
-        }
-		
-		#applyResourceToCellBtn {
-            background-color: #8B814C;
-            color: white;
-            margin-top: 6px;
-        }
-
-        #exportResourceBtn {
-            background-color: #6f42c1;
-            color: white;
-            margin-top: 6px;
-        }
-
-        .canvas-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            min-width: 0;
-        }
-
-        #mapCanvas {
-            border: 1px solid #ccc;
-            cursor: crosshair;
-            display: block;
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* responsive: single column on narrow screens */
-        @media (max-width: 900px) {
+            /* 三列布局：左、 中、 右 */
             .container {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: var(--new-control-width) var(--new-control-width) 1fr;
+                gap: 20px;
+                max-width: 1400px;
+                width: 100%;
+                align-items: start;
+            }
+
+            .controls {
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .layer-panel {
+                /* 第二列容器 */
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .controls h1,
+            .layer-panel h1 {
+                font-size: 20px;
+                margin-bottom: 12px;
+                color: #333;
+                text-align: center;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+            }
+
+            .input-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+                color: #555;
+            }
+
+            .input-group input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+            .input-hint {
+                display: block;
+                margin-top: 3px;
+                font-size: 11px;
+                color: #888;
+            }
+
+            .button-group {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            button {
+                padding: 10px 15px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s;
+            }
+
+            #generateBtn {
+                background-color: #007bff;
+                color: white;
+                grid-column: span 2;
+            }
+
+            #generateBtn:hover {
+                background-color: #0056b3;
+            }
+
+            #zoomInBtn,
+            #zoomOutBtn {
+                background-color: #28a745;
+                color: white;
+            }
+
+            #zoomInBtn:hover,
+            #zoomOutBtn:hover {
+                background-color: #1e7e34;
+            }
+
+            #printBtn {
+                background-color: #dc3545;
+                color: white;
+                grid-column: span 2;
+            }
+
+            #printBtn:hover {
+                background-color: #c82333;
+            }
+
+            .info-panel {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 4px;
+                border: 1px solid #e9ecef;
+                margin-bottom: 12px;
+            }
+
+            .info-panel h3 {
+                margin-bottom: 10px;
+                color: #333;
+            }
+
+            #cellInfo {
+                font-size: 14px;
+                color: #666;
+                line-height: 1.5;
+            }
+
+            .preset-btn {
+                padding: 5px 8px;
+                font-size: 12px;
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                color: #495057;
+                border-radius: 3px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .preset-btn:hover {
+                background-color: #e9ecef;
+                border-color: #adb5bd;
+            }
+
+            .preset-btn.active {
+                background-color: #007bff;
+                color: white;
+                border-color: #007bff;
+            }
+
+            .layer-controls {
+                background-color: transparent;
+                padding: 0;
+                border-radius: 4px;
+            }
+
+            .layer-controls label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 6px;
+                color: #333;
+                font-size: 13px;
             }
 
             #layerSelect {
-                height: 140px;
+                width: 100%;
+                height: 120px;
+                padding: 6px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 13px;
+                margin-bottom: 8px;
+                box-sizing: border-box;
+            }
+
+            #monsterSelect,
+            #resourceSelect {
+                width: 100%;
+                height: 130px;
+                padding: 6px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 13px;
+                margin-bottom: 6px;
+                box-sizing: border-box;
+            }
+
+            #highlightBtn {
+                background-color: #20c997;
+                color: white;
+                margin-right: 8px;
+            }
+
+            #clearHighlightBtn {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            #applyMonsterBtn {
+                background-color: #e67e22;
+                color: white;
+                margin-top: 6px;
+            }
+
+            #applyMonsterToCellBtn {
+                background-color: #8B814C;
+                color: white;
+                margin-top: 6px;
+            }
+
+            #applyResourceBtn {
+                background-color: #17a2b8;
+                color: white;
+                margin-top: 6px;
+            }
+
+            #applyResourceToCellBtn {
+                background-color: #8B814C;
+                color: white;
+                margin-top: 6px;
+            }
+
+            #exportResourceBtn {
+                background-color: #6f42c1;
+                color: white;
+                margin-top: 6px;
             }
 
             .canvas-container {
-                min-height: 360px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                overflow: hidden;
+                min-width: 0;
             }
-        }
 
-        @media (max-width: 480px) {
-            .button-group {
-                grid-template-columns: 1fr;
+            #mapCanvas {
+                border: 1px solid #ccc;
+                cursor: crosshair;
+                display: block;
+                max-width: 100%;
+                height: auto;
             }
 
-            #generateBtn, #printBtn {
-                grid-column: span 1;
+            /* responsive: single column on narrow screens */
+            @media (max-width: 900px) {
+                .container {
+                    grid-template-columns: 1fr;
+                }
+
+                #layerSelect {
+                    height: 140px;
+                }
+
+                .canvas-container {
+                    min-height: 360px;
+                }
             }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 第1列：参数 + 按钮 -->
-        <div class="controls">
-            <div class="input-group">
-                <label for="mapWidth">地图宽度 (像素):</label>
-                <input type="number" id="mapWidth" value="1199" min="100" max="2000">
-                <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
-            </div>
-            <div class="input-group">
-                <label for="mapHeight">地图高度 (像素):</label>
-                <input type="number" id="mapHeight" value="1199" min="100" max="2000">
-                <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
-            </div>
-            <div class="input-group">
-                <label for="cellSize">格子边长 (像素):</label>
-                <input type="number" id="cellSize" value="100" min="10" max="200">
-                <small class="input-hint">范围: 10-200像素</small>
-            </div>
-            <div class="button-group">
-                <button id="generateBtn">生成地图</button>
-                <button id="zoomInBtn">放大</button>
-                <button id="zoomOutBtn">缩小</button>
-                <button id="printBtn">打印数据</button>
-            </div>
 
-            <div class="info-panel">
-                <h3>格子信息</h3>
-                <p id="cellInfo">点击格子查看详细信息</p>
-            </div>
+            @media (max-width: 480px) {
+                .button-group {
+                    grid-template-columns: 1fr;
+                }
 
-            <!-- 联盟资源控制区域 -->
-            <div class="alliance-panel" style="margin-top: 20px;">
-                <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">联盟资源配置</h3>
+                #generateBtn,
+                #printBtn {
+                    grid-column: span 1;
+                }
+            }
+        </style>
+    </head>
 
-                <!-- 剔除功能按钮 -->
-                <div style="margin-bottom: 15px;">
-                    <button id="excludeBtn" style="background: #ffc107; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                        点击剔除格子（激活后单击格子标黄）
-                    </button>
-                    <button id="clearExcludeBtn" style="background: #6c757d; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 8px;">
-                        清除剔除
-                    </button>
-                </div>
-
-                <!-- 联盟资源数量输入 -->
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
-                    <div class="input-group">
-                        <label for="allianceFarm">联盟农场数量：</label>
-                        <input type="number" id="allianceFarm" value="0" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label for="allianceWood">联盟伐木厂数量：</label>
-                        <input type="number" id="allianceWood" value="0" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label for="allianceMine">联盟煤矿厂数量：</label>
-                        <input type="number" id="allianceMine" value="0" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label for="allianceIron">联盟铁矿厂数量：</label>
-                        <input type="number" id="allianceIron" value="0" min="0">
-                    </div>
-                </div>
-
-                <!-- 资源半径限制 -->
+    <body>
+        <div class="container">
+            <!-- 第1列：参数 + 按钮 -->
+            <div class="controls">
                 <div class="input-group">
-                    <label for="resourceRadius">资源半径限制（像素）：</label>
-                    <input type="number" id="resourceRadius" value="150" min="0">
-                    <small class="input-hint">0=无限制，150=150像素内不能生成相同资源</small>
+                    <label for="mapWidth">地图宽度 (像素):</label>
+                    <input type="number" id="mapWidth" value="1199" min="100" max="2000">
+                    <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
+                </div>
+                <div class="input-group">
+                    <label for="mapHeight">地图高度 (像素):</label>
+                    <input type="number" id="mapHeight" value="1199" min="100" max="2000">
+                    <small class="input-hint">范围: 100-2000像素（注意：此值表示最大坐标，例如 1199 表示 0..1199）</small>
+                </div>
+                <div class="input-group">
+                    <label for="cellSize">格子边长 (像素):</label>
+                    <input type="number" id="cellSize" value="100" min="10" max="200">
+                    <small class="input-hint">范围: 10-200像素</small>
+                </div>
+                <div class="button-group">
+                    <button id="generateBtn">生成地图</button>
+                    <button id="zoomInBtn">放大</button>
+                    <button id="zoomOutBtn">缩小</button>
+                    <button id="printBtn">打印数据</button>
                 </div>
 
-                <!-- 生成联盟资源按钮 -->
-                <div class="button-group" style="margin-top: 15px;">
-                    <button id="generateAllianceBtn" style="background: #28a745; color: #fff;">
-                        生成联盟资源
-                    </button>
-                    <button id="clearAllianceBtn" style="background: #dc3545; color: #fff;">
-                        清除联盟资源
-                    </button>
+                <div class="info-panel">
+                    <h3>格子信息</h3>
+                    <p id="cellInfo">点击格子查看详细信息</p>
                 </div>
 
-                <!-- 资源统计显示 -->
-                <div id="resourceStats" style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
-                    <div id="statsContent"></div>
+                <!-- 联盟资源控制区域 -->
+                <div class="alliance-panel" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #333; font-size: 16px;">联盟资源配置</h3>
+
+                    <!-- 剔除功能按钮 -->
+                    <div style="margin-bottom: 15px;">
+                        <button id="excludeBtn"
+                            style="background: #ffc107; color: #000; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            剔除格子
+                        </button>
+                        <button id="clearExcludeBtn"
+                            style="background: #6c757d; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 8px;">
+                            清除剔除
+                        </button>
+                    </div>
+
+                    <!-- 联盟资源数量输入 -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">资源数量设置</h4>
+                        <div class="input-group">
+                            <label for="allianceFarm">联盟农场数量：</label>
+                            <input type="number" id="allianceFarm" value="0" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="allianceWood">联盟伐木厂数量：</label>
+                            <input type="number" id="allianceWood" value="0" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="allianceMine">联盟煤矿厂数量：</label>
+                            <input type="number" id="allianceMine" value="0" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="allianceIron">联盟铁矿厂数量：</label>
+                            <input type="number" id="allianceIron" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <!-- 资源半径限制 -->
+                    <div class="input-group">
+                        <label for="resourceRadius">资源半径限制（像素）：</label>
+                        <input type="number" id="resourceRadius" value="150" min="0">
+                        <small class="input-hint">0=无限制，150=150像素内不能生成相同资源</small>
+                    </div>
+
+                    <!-- 生成联盟资源按钮 -->
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button id="generateAllianceBtn" style="background: #28a745; color: #fff;">
+                            生成资源
+                        </button>
+                        <button id="clearAllianceBtn" style="background: #dc3545; color: #fff;">
+                            清除资源
+                        </button>
+                    </div>
+
+                    <!-- 资源统计显示 -->
+                    <div id="resourceStats"
+                        style="background: #e9ecef; padding: 10px; border-radius: 4px; font-size: 13px; margin-top: 15px; display: none;">
+                        <div id="statsContent"></div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
+            <div class="layer-panel">
+                <div class="layer-controls">
+                    <label for="layerSelect">圈层列表（多选）</label>
+                    <select id="layerSelect" multiple></select>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button id="highlightBtn">高亮选择</button>
+                        <button id="clearHighlightBtn">清除高亮</button>
+                    </div>
+                    <hr style="margin:12px 0;">
+
+                    <label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，可多选）</label>
+                    <select id="monsterSelect" multiple></select>
+                    <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                        <label style="font-size:13px;color:#333;">怪物数量：</label>
+                        <input id="monsterQuantity" type="number" value="1" placeholder="正数添加，负数移除"
+                            style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                        <button id="setMonsterQtyBtn"
+                            style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <button id="applyMonsterBtn">怪物到圈层</button>
+                        <button id="applyMonsterToCellBtn">怪物到格子</button>
+                    </div>
+
+                    <hr style="margin:12px 0;">
+
+                    <label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，可多选）</label>
+                    <select id="resourceSelect" multiple></select>
+                    <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                        <label style="font-size:13px;color:#333;">资源数量：</label>
+                        <input id="resourceQuantity" type="number" value="1" placeholder="正数添加，负数移除"
+                            style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
+                        <button id="setResourceQtyBtn"
+                            style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <button id="applyResourceBtn">资源到圈层</button>
+                        <!-- 新增：直接添加到当前选中格子的按钮 -->
+                        <button id="applyResourceToCellBtn">资源到格子</button>
+                    </div>
+                    <hr style="margin:10px 0;">
+                    <div style="display:flex; gap:8px; margin-top:10px;">
+                        <button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第3列：画布 -->
+            <div class="canvas-container">
+                <canvas id="mapCanvas"></canvas>
             </div>
         </div>
 
-        <!-- 第2列：圈层列表（多选） + 按类型的资源/怪物列表（多选） -->
-		<div class="layer-panel">
-			<div class="layer-controls">
-				<label for="layerSelect">圈层列表（多选）</label>
-				<select id="layerSelect" multiple></select>
-				<div style="display:flex; gap:8px; margin-top:8px;">
-					<button id="highlightBtn">高亮选择</button>
-					<button id="clearHighlightBtn">清除高亮</button>
-				</div>
-				<hr style="margin:12px 0;">
+        <!-- 先引入资源数据脚本（同步定义全局 MAP_RESOURCES），避免 fetch -->
+        <script src="map-resources.js"></script>
 
-				<label for="monsterSelect" style="margin-top:8px;">怪物列表（类型1，可多选）</label>
-				<select id="monsterSelect" multiple></select>
-				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
-					<label style="font-size:13px;color:#333;">怪物数量：</label>
-					<input id="monsterQuantity" type="number" value="1" placeholder="正数添加，负数移除" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
-					<button id="setMonsterQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
-				</div>
-				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-					<button id="applyMonsterBtn">怪物到圈层</button>
-					<button id="applyMonsterToCellBtn">怪物到格子</button>
-				</div>
+        <script>
+            class MapTools {
+                constructor() {
+                    this.canvas = document.getElementById('mapCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.canvasContainer = document.querySelector('.canvas-container');
+                    this.cells = [];
+                    this.selectedCell = null;
+                    this.zoom = 1;
+                    this.mapWidth = 800;  // 用户输入，表示最大坐标（例如 1199 表示 0..1199）
+                    this.mapHeight = 600; // 用户输入，表示最大坐标
+                    this.cellSize = 100;
+                    this.mapAngle = 0; // 0 or 45
 
-				<hr style="margin:12px 0;">
+                    // 实际像素宽高（因为坐标从0开始，长度 = maxCoord + 1）
+                    this.actualMapWidth = this.mapWidth + 1;
+                    this.actualMapHeight = this.mapHeight + 1;
 
-				<label for="resourceSelect" style="margin-top:8px;">资源列表（类型2，可多选）</label>
-				<select id="resourceSelect" multiple></select>
-				<div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
-					<label style="font-size:13px;color:#333;">资源数量：</label>
-					<input id="resourceQuantity" type="number" value="1" placeholder="正数添加，负数移除" style="width:80px;padding:6px;border:1px solid #ddd;border-radius:4px;">
-					<button id="setResourceQtyBtn" style="background:#007bff;color:#fff;padding:6px 8px;border-radius:4px;">设置</button>
-				</div>
-				<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-					<button id="applyResourceBtn">资源到圈层</button>
-					<!-- 新增：直接添加到当前选中格子的按钮 -->
-					<button id="applyResourceToCellBtn">资源到格子</button>
-				</div>
-				<hr style="margin:10px 0;">
-				<div style="display:flex; gap:8px; margin-top:10px;">
-					<button id="exportResourceBtn">导出(怪物先，空行，再资源)</button>
-				</div>
-			</div>
-		</div>
+                    // 当前支持的圈层数（整数）
+                    this.maxLayers = 0;
 
-        <!-- 第3列：画布 -->
-        <div class="canvas-container">
-            <canvas id="mapCanvas"></canvas>
-        </div>
-    </div>
+                    // 被选中高亮的圈层集合，存储为零基索引（layer 变量）
+                    this.highlightedLayers = new Set();
 
-    <!-- 先引入资源数据脚本（同步定义全局 MAP_RESOURCES），避免 fetch -->
-    <script src="map-resources.js"></script>
-
-    <script>
-        class MapTools {
-            constructor() {
-                this.canvas = document.getElementById('mapCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.canvasContainer = document.querySelector('.canvas-container');
-                this.cells = [];
-                this.selectedCell = null;
-                this.zoom = 1;
-                this.mapWidth = 800;  // 用户输入，表示最大坐标（例如 1199 表示 0..1199）
-                this.mapHeight = 600; // 用户输入，表示最大坐标
-                this.cellSize = 100;
-                this.mapAngle = 0; // 0 or 45
-
-                // 实际像素宽高（因为坐标从0开始，长度 = maxCoord + 1）
-                this.actualMapWidth = this.mapWidth + 1;
-                this.actualMapHeight = this.mapHeight + 1;
-
-                // 当前支持的圈层数（整数）
-                this.maxLayers = 0;
-
-                // 被选中高亮的圈层集合，存储为零基索引（layer 变量）
-                this.highlightedLayers = new Set();
-
-                // devicePixelRatio 支持
-                this.dpr = window.devicePixelRatio || 1;
-
-                // 拖拽相关
-                this.isDragging = false;
-                this.dragStartX = 0;
-                this.dragStartY = 0;
-                this.mapOffsetX = 0; // CSS 像素
-                this.mapOffsetY = 0;
-
-                // 资源相关
-                this.allItems = []; // 原始数组含 type
-                this.monsters = []; // type=1
-                this.resources = []; // type=2
-                this.allianceResources = []; // type=3
-
-                // 剔除功能相关
-                this.excludeMode = false;
-                this.excludedCells = new Set(); // 存储被剔除的格子ID
-
-                this.initEventListeners();
-                this.loadResourcesFromGlobal();
-                this.generateMap();
-            }
-
-            initEventListeners() {
-                document.getElementById('generateBtn').addEventListener('click', () => {
-                    this.generateMap();
-                });
-
-                document.getElementById('zoomInBtn').addEventListener('click', () => {
-                    this.changeZoom(0.1);
-                });
-
-                document.getElementById('zoomOutBtn').addEventListener('click', () => {
-                    this.changeZoom(-0.1);
-                });
-
-                document.getElementById('printBtn').addEventListener('click', () => {
-                    this.printData();
-                });
-
-                document.getElementById('highlightBtn').addEventListener('click', () => {
-                    this.applyLayerHighlight();
-                });
-
-                document.getElementById('clearHighlightBtn').addEventListener('click', () => {
-                    this.clearLayerHighlight();
-                });
-
-                document.getElementById('applyMonsterBtn').addEventListener('click', () => {
-                    this.applyItemsToSelectedLayers(1);
-                });
-
-                document.getElementById('applyResourceBtn').addEventListener('click', () => {
-                    this.applyItemsToSelectedLayers(2);
-                });
-				
-				// 新增：直接将选中的怪物添加到当前选中的格子
-				const applyMonsterToCellBtn = document.getElementById('applyMonsterToCellBtn');
-				if (applyMonsterToCellBtn) {
-					applyMonsterToCellBtn.addEventListener('click', () => {
-						this.applyItemsToSelectedCell(1);
-					});
-				}
-
-				// 新增：直接将选中的资源添加到当前选中的格子
-				const applyResourceToCellBtn = document.getElementById('applyResourceToCellBtn');
-				if (applyResourceToCellBtn) {
-					applyResourceToCellBtn.addEventListener('click', () => {
-						this.applyItemsToSelectedCell(2);
-					});
-				}
-				
-                document.getElementById('exportResourceBtn').addEventListener('click', () => {
-                    this.exportSeparatedData();
-                });
-
-                // 联盟资源相关事件监听器
-                document.getElementById('excludeBtn').addEventListener('click', () => {
-                    this.toggleExcludeMode();
-                });
-                document.getElementById('clearExcludeBtn').addEventListener('click', () => {
-                    this.clearExcludedCells();
-                });
-                document.getElementById('generateAllianceBtn').addEventListener('click', () => {
-                    this.generateAllianceResources();
-                });
-                document.getElementById('clearAllianceBtn').addEventListener('click', () => {
-                    this.clearAllianceResources();
-                });
-
-                // Set quantity buttons for batch or single selection edits
-                document.getElementById('setMonsterQtyBtn').addEventListener('click', () => {
-                    this.setItemQuantity(1);
-                });
-                document.getElementById('setResourceQtyBtn').addEventListener('click', () => {
-                    this.setItemQuantity(2);
-                });
-
-                // synchronize select -> quantity input when selection changes
-                document.getElementById('monsterSelect').addEventListener('change', () => {
-                    this.syncQuantityInputFromSelection(1);
-                });
-                document.getElementById('resourceSelect').addEventListener('change', () => {
-                    this.syncQuantityInputFromSelection(2);
-                });
-
-                // unified event to map coordinate
-                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
-                this.canvas.addEventListener('mousemove', (e) => this.handleCanvasHover(e));
-
-                // dragging
-                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-                this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-                this.canvas.addEventListener('mouseleave', (e) => this.handleMouseUp(e));
-
-                // resize / dpr change
-                window.addEventListener('resize', () => {
+                    // devicePixelRatio 支持
                     this.dpr = window.devicePixelRatio || 1;
-                    this.updateCanvasSize();
-                    this.drawMap();
-                });
-            }
 
-            loadResourcesFromGlobal() {
-                // 读取全局 MAP_RESOURCES（由 map-resources.js 提供）
-                if (window.MAP_RESOURCES && Array.isArray(window.MAP_RESOURCES)) {
-                    // 保留原始数量，支持负数用于移除资源，默认 0
-                    this.allItems = window.MAP_RESOURCES.map(i => {
-                        const q = (i.qty != null) ? parseInt(i.qty) : 0;
-                        const safeQ = isNaN(q) ? 0 : q; // 允许负数
-                        return { id: i.id, name: i.name, type: i.type, qty: safeQ };
+                    // 拖拽相关
+                    this.isDragging = false;
+                    this.dragStartX = 0;
+                    this.dragStartY = 0;
+                    this.mapOffsetX = 0; // CSS 像素
+                    this.mapOffsetY = 0;
+
+                    // 资源相关
+                    this.allItems = []; // 原始数组含 type
+                    this.monsters = []; // type=1
+                    this.resources = []; // type=2
+                    this.allianceResources = []; // type=3
+
+                    // 剔除功能相关
+                    this.excludeMode = false;
+                    this.excludedCells = new Set(); // 存储被剔除的格子ID
+
+                    this.initEventListeners();
+                    this.loadResourcesFromGlobal();
+                    this.generateMap();
+                }
+
+                initEventListeners() {
+                    document.getElementById('generateBtn').addEventListener('click', () => {
+                        this.generateMap();
                     });
-                } else {
-                    this.allItems = [];
-                    console.warn('MAP_RESOURCES 未定义或格式不对，资源/怪物列表为空。');
+
+                    document.getElementById('zoomInBtn').addEventListener('click', () => {
+                        this.changeZoom(0.1);
+                    });
+
+                    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+                        this.changeZoom(-0.1);
+                    });
+
+                    document.getElementById('printBtn').addEventListener('click', () => {
+                        this.printData();
+                    });
+
+                    document.getElementById('highlightBtn').addEventListener('click', () => {
+                        this.applyLayerHighlight();
+                    });
+
+                    document.getElementById('clearHighlightBtn').addEventListener('click', () => {
+                        this.clearLayerHighlight();
+                    });
+
+                    document.getElementById('applyMonsterBtn').addEventListener('click', () => {
+                        this.applyItemsToSelectedLayers(1);
+                    });
+
+                    document.getElementById('applyResourceBtn').addEventListener('click', () => {
+                        this.applyItemsToSelectedLayers(2);
+                    });
+
+                    // 新增：直接将选中的怪物添加到当前选中的格子
+                    const applyMonsterToCellBtn = document.getElementById('applyMonsterToCellBtn');
+                    if (applyMonsterToCellBtn) {
+                        applyMonsterToCellBtn.addEventListener('click', () => {
+                            this.applyItemsToSelectedCell(1);
+                        });
+                    }
+
+                    // 新增：直接将选中的资源添加到当前选中的格子
+                    const applyResourceToCellBtn = document.getElementById('applyResourceToCellBtn');
+                    if (applyResourceToCellBtn) {
+                        applyResourceToCellBtn.addEventListener('click', () => {
+                            this.applyItemsToSelectedCell(2);
+                        });
+                    }
+
+                    document.getElementById('exportResourceBtn').addEventListener('click', () => {
+                        this.exportSeparatedData();
+                    });
+
+                    // 联盟资源相关事件监听器
+                    document.getElementById('excludeBtn').addEventListener('click', () => {
+                        this.toggleExcludeMode();
+                    });
+                    document.getElementById('clearExcludeBtn').addEventListener('click', () => {
+                        this.clearExcludedCells();
+                    });
+                    document.getElementById('generateAllianceBtn').addEventListener('click', () => {
+                        this.generateAllianceResources();
+                    });
+                    document.getElementById('clearAllianceBtn').addEventListener('click', () => {
+                        this.clearAllianceResources();
+                    });
+
+                    // Set quantity buttons for batch or single selection edits
+                    document.getElementById('setMonsterQtyBtn').addEventListener('click', () => {
+                        this.setItemQuantity(1);
+                    });
+                    document.getElementById('setResourceQtyBtn').addEventListener('click', () => {
+                        this.setItemQuantity(2);
+                    });
+
+                    // synchronize select -> quantity input when selection changes
+                    document.getElementById('monsterSelect').addEventListener('change', () => {
+                        this.syncQuantityInputFromSelection(1);
+                    });
+                    document.getElementById('resourceSelect').addEventListener('change', () => {
+                        this.syncQuantityInputFromSelection(2);
+                    });
+
+                    // unified event to map coordinate
+                    this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+                    this.canvas.addEventListener('mousemove', (e) => this.handleCanvasHover(e));
+
+                    // dragging
+                    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                    this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                    this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                    this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                    this.canvas.addEventListener('mouseleave', (e) => this.handleMouseUp(e));
+
+                    // resize / dpr change
+                    window.addEventListener('resize', () => {
+                        this.dpr = window.devicePixelRatio || 1;
+                        this.updateCanvasSize();
+                        this.drawMap();
+                    });
                 }
 
-                this.monsters = this.allItems.filter(i => Number(i.type) === 1).map(i => Object.assign({}, i));
-                this.resources = this.allItems.filter(i => Number(i.type) === 2).map(i => Object.assign({}, i));
-                this.allianceResources = this.allItems.filter(i => Number(i.type) === 3).map(i => Object.assign({}, i));
-
-                this.updateMonsterList();
-                this.updateResourceList();
-            }
-
-            updateMonsterList() {
-                const sel = document.getElementById('monsterSelect');
-                sel.innerHTML = '';
-                for (const r of this.monsters) {
-                    const opt = document.createElement('option');
-                    opt.value = String(r.id);
-                    // 存储 qty 到 data 属性，保留原始值（包括负数）
-                    const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
-                    const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
-                    opt.dataset.qty = String(qty);
-                    // 在选项文本中显示数量（包括负数）
-                    opt.text = `${r.name} (${r.id}) (数量:${qty})`;
-                    sel.appendChild(opt);
-                }
-                // try to sync quantity input when list refreshed
-                this.syncQuantityInputFromSelection(1);
-            }
-
-            updateResourceList() {
-                const sel = document.getElementById('resourceSelect');
-                sel.innerHTML = '';
-                for (const r of this.resources) {
-                    const opt = document.createElement('option');
-                    opt.value = String(r.id);
-                    const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
-                    const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
-                    opt.dataset.qty = String(qty);
-                    opt.text = `${r.name} (${r.id}) (数量:${qty})`;
-                    sel.appendChild(opt);
-                }
-                this.syncQuantityInputFromSelection(2);
-            }
-
-            // 当用户在列表中选择时，更新"每项数量"输入框显示
-            // 若多选且所有选中项的数量相同，则显示该数量；否则清空输入框以提示用户这是混合值
-            syncQuantityInputFromSelection(type) {
-                const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
-                const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
-                const selectedOptions = Array.from(select.selectedOptions || []);
-                if (selectedOptions.length === 0) {
-                    // show nothing / keep default
-                    // do not override user manual edits if none selected
-                    return;
-                }
-                const qtys = selectedOptions.map(opt => {
-                    const v = opt.dataset.qty;
-                    const n = Number(v);
-                    return isNaN(n) ? null : n;
-                });
-                const allSame = qtys.every(q => q === qtys[0]);
-                if (allSame) {
-                    input.value = qtys[0] != null ? qtys[0] : '';
-                } else {
-                    input.value = '';
-                }
-            }
-
-            // 将输入框的数量设置到选中的列表项（支持多选批量设置，也支持单个设置，支持负数）
-            setItemQuantity(type) {
-                const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
-                const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
-                let val = parseInt(input.value);
-                if (isNaN(val)) {
-                    alert('请输入有效数量（整数，支持负数用于移除资源）。');
-                    return;
-                }
-                // 允许负数，用于移除资源
-
-                const selOpts = Array.from(select.selectedOptions || []);
-                if (selOpts.length === 0) {
-                    alert('请先在列表中选择一个或多个项，再设置数量。');
-                    return;
-                }
-                // update underlying data arrays
-                const arr = (type === 1) ? this.monsters : this.resources;
-                for (const opt of selOpts) {
-                    const idStr = String(opt.value);
-                    opt.dataset.qty = String(val);
-                    // 更新文本显示，保证旧有的 (数量:...) 会被替换
-                    const base = this._getBaseTextForOption(opt.textContent || '', idStr);
-                    opt.text = `${base} (数量:${val})`;
-                    // 更新数组 entry
-                    const found = arr.find(a => String(a.id) === idStr);
-                    if (found) {
-                        found.qty = val;
+                loadResourcesFromGlobal() {
+                    // 读取全局 MAP_RESOURCES（由 map-resources.js 提供）
+                    if (window.MAP_RESOURCES && Array.isArray(window.MAP_RESOURCES)) {
+                        // 保留原始数量，支持负数用于移除资源，默认 0
+                        this.allItems = window.MAP_RESOURCES.map(i => {
+                            const q = (i.qty != null) ? parseInt(i.qty) : 0;
+                            const safeQ = isNaN(q) ? 0 : q; // 允许负数
+                            return { id: i.id, name: i.name, type: i.type, qty: safeQ };
+                        });
                     } else {
-                        // 如果找不到，插入一项（保守处理）
-                        arr.push({ id: idStr, name: base.split(' (')[0], type: type, qty: val });
+                        this.allItems = [];
+                        console.warn('MAP_RESOURCES 未定义或格式不对，资源/怪物列表为空。');
+                    }
+
+                    this.monsters = this.allItems.filter(i => Number(i.type) === 1).map(i => Object.assign({}, i));
+                    this.resources = this.allItems.filter(i => Number(i.type) === 2).map(i => Object.assign({}, i));
+                    this.allianceResources = this.allItems.filter(i => Number(i.type) === 3).map(i => Object.assign({}, i));
+
+                    this.updateMonsterList();
+                    this.updateResourceList();
+                }
+
+                updateMonsterList() {
+                    const sel = document.getElementById('monsterSelect');
+                    sel.innerHTML = '';
+                    for (const r of this.monsters) {
+                        const opt = document.createElement('option');
+                        opt.value = String(r.id);
+                        // 存储 qty 到 data 属性，保留原始值（包括负数）
+                        const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
+                        const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
+                        opt.dataset.qty = String(qty);
+                        // 在选项文本中显示数量（包括负数）
+                        opt.text = `${r.name} (${r.id}) (数量:${qty})`;
+                        sel.appendChild(opt);
+                    }
+                    // try to sync quantity input when list refreshed
+                    this.syncQuantityInputFromSelection(1);
+                }
+
+                updateResourceList() {
+                    const sel = document.getElementById('resourceSelect');
+                    sel.innerHTML = '';
+                    for (const r of this.resources) {
+                        const opt = document.createElement('option');
+                        opt.value = String(r.id);
+                        const qtyVal = (r.qty != null) ? Number(r.qty) : 0;
+                        const qty = isNaN(qtyVal) ? 0 : qtyVal; // 允许负数
+                        opt.dataset.qty = String(qty);
+                        opt.text = `${r.name} (${r.id}) (数量:${qty})`;
+                        sel.appendChild(opt);
+                    }
+                    this.syncQuantityInputFromSelection(2);
+                }
+
+                // 当用户在列表中选择时，更新"每项数量"输入框显示
+                // 若多选且所有选中项的数量相同，则显示该数量；否则清空输入框以提示用户这是混合值
+                syncQuantityInputFromSelection(type) {
+                    const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                    const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+                    const selectedOptions = Array.from(select.selectedOptions || []);
+                    if (selectedOptions.length === 0) {
+                        // show nothing / keep default
+                        // do not override user manual edits if none selected
+                        return;
+                    }
+                    const qtys = selectedOptions.map(opt => {
+                        const v = opt.dataset.qty;
+                        const n = Number(v);
+                        return isNaN(n) ? null : n;
+                    });
+                    const allSame = qtys.every(q => q === qtys[0]);
+                    if (allSame) {
+                        input.value = qtys[0] != null ? qtys[0] : '';
+                    } else {
+                        input.value = '';
                     }
                 }
-            }
 
-            // helper to try to reconstruct base name/id text without existing (数量:...) suffix
-            _getBaseTextForOption(fullText, idStr) {
-                // fullText might be like: "名字 (123) (数量:5)" or "名字 (123)"
-                // ensure we return "名字 (123)"
-                const idToken = `(${idStr})`;
-                const idx = fullText.indexOf(idToken);
-                if (idx >= 0) {
-                    return fullText.substring(0, idx + idToken.length).trim();
-                }
-                // fallback
-                return fullText.split('(数量:')[0].trim();
-            }
+                // 将输入框的数量设置到选中的列表项（支持多选批量设置，也支持单个设置，支持负数）
+                setItemQuantity(type) {
+                    const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                    const input = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+                    let val = parseInt(input.value);
+                    if (isNaN(val)) {
+                        alert('请输入有效数量（整数，支持负数用于移除资源）。');
+                        return;
+                    }
+                    // 允许负数，用于移除资源
 
-            generateMap() {
-                // read inputs (用户输入表示最大坐标值)
-                this.mapWidth = parseInt(document.getElementById('mapWidth').value) || this.mapWidth;
-                this.mapHeight = parseInt(document.getElementById('mapHeight').value) || this.mapHeight;
-                this.cellSize = parseInt(document.getElementById('cellSize').value) || this.cellSize;
-
-                // 更新实际像素长度（坐标从0开始 => 长度 = 最大坐标 + 1）
-                this.actualMapWidth = this.mapWidth + 1;
-                this.actualMapHeight = this.mapHeight + 1;
-
-                // validate ranges (基于用户输入的最大坐标)
-                if (this.mapWidth < 100 || this.mapWidth > 2000 ||
-                    this.mapHeight < 100 || this.mapHeight > 2000 ||
-                    this.cellSize < 10 || this.cellSize > 200) {
-                    alert('请输入有效的参数范围：\n地图边长(最大坐标): 100-2000 像素\n格子边长: 10-200像素');
-                    return;
-                }
-
-                if (this.mapAngle !== 0 && this.mapAngle !== 45) {
-                    alert('请选择有效的角度：0° 或 45°');
-                    return;
+                    const selOpts = Array.from(select.selectedOptions || []);
+                    if (selOpts.length === 0) {
+                        alert('请先在列表中选择一个或多个项，再设置数量。');
+                        return;
+                    }
+                    // update underlying data arrays
+                    const arr = (type === 1) ? this.monsters : this.resources;
+                    for (const opt of selOpts) {
+                        const idStr = String(opt.value);
+                        opt.dataset.qty = String(val);
+                        // 更新文本显示，保证旧有的 (数量:...) 会被替换
+                        const base = this._getBaseTextForOption(opt.textContent || '', idStr);
+                        opt.text = `${base} (数量:${val})`;
+                        // 更新数组 entry
+                        const found = arr.find(a => String(a.id) === idStr);
+                        if (found) {
+                            found.qty = val;
+                        } else {
+                            // 如果找不到，插入一项（保守处理）
+                            arr.push({ id: idStr, name: base.split(' (')[0], type: type, qty: val });
+                        }
+                    }
                 }
 
-                // 新增校验：实际像素长度 (maxCoord + 1) 必须能被格子边长整除，否则停止生成并提示
-                const msgs = [];
-                if (this.actualMapWidth % this.cellSize !== 0) {
-                    msgs.push(`(宽) 实际像素长度 ${this.actualMapWidth} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapWidth % this.cellSize}`);
-                }
-                if (this.actualMapHeight % this.cellSize !== 0) {
-                    msgs.push(`(高) 实际像素长度 ${this.actualMapHeight} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapHeight % this.cellSize}`);
-                }
-                if (msgs.length) {
-                    alert(msgs.join('\n') + '\n请调整参数 (注意：输入为最大坐标，实际像素长度 = 最大坐标 + 1)。');
-                    return;
-                }
-
-                // 计算行列（使用实际像素长度 / 格子尺寸）
-                this.cols = this.actualMapWidth / this.cellSize;
-                this.rows = this.actualMapHeight / this.cellSize;
-
-                // 生成格子（螺旋）
-                this.generateCellsSpiral();
-
-                // 初始化 cell.resources（每次生成都会清空之前的资源分配）
-                for (const c of this.cells) {
-                    c.resources = []; // 每项为 { type, id, qty }
+                // helper to try to reconstruct base name/id text without existing (数量:...) suffix
+                _getBaseTextForOption(fullText, idStr) {
+                    // fullText might be like: "名字 (123) (数量:5)" or "名字 (123)"
+                    // ensure we return "名字 (123)"
+                    const idToken = `(${idStr})`;
+                    const idx = fullText.indexOf(idToken);
+                    if (idx >= 0) {
+                        return fullText.substring(0, idx + idToken.length).trim();
+                    }
+                    // fallback
+                    return fullText.split('(数量:')[0].trim();
                 }
 
-                // 计算圈层数（最大圈层）
-                this.maxLayers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+                generateMap() {
+                    // read inputs (用户输入表示最大坐标值)
+                    this.mapWidth = parseInt(document.getElementById('mapWidth').value) || this.mapWidth;
+                    this.mapHeight = parseInt(document.getElementById('mapHeight').value) || this.mapHeight;
+                    this.cellSize = parseInt(document.getElementById('cellSize').value) || this.cellSize;
 
-                // 初始化层列表选择框
-                this.updateLayerSelect();
+                    // 更新实际像素长度（坐标从0开始 => 长度 = 最大坐标 + 1）
+                    this.actualMapWidth = this.mapWidth + 1;
+                    this.actualMapHeight = this.mapHeight + 1;
 
-                // Fit by available viewport height so map shows fully without vertical scroll
-                const viewportHeight = window.innerHeight;
-                const containerRect = this.canvasContainer.getBoundingClientRect();
-                // available height below the top of the canvas container (leave small margin)
-                const availableHeight = Math.max(100, viewportHeight - containerRect.top - 20);
+                    // validate ranges (基于用户输入的最大坐标)
+                    if (this.mapWidth < 100 || this.mapWidth > 2000 ||
+                        this.mapHeight < 100 || this.mapHeight > 2000 ||
+                        this.cellSize < 10 || this.cellSize > 200) {
+                        alert('请输入有效的参数范围：\n地图边长(最大坐标): 100-2000 像素\n格子边长: 10-200像素');
+                        return;
+                    }
 
-                // fitZoom based on实际像素高度
-                const fitZoom = availableHeight / this.actualMapHeight;
-                this.zoom = Math.min(1, fitZoom);
+                    if (this.mapAngle !== 0 && this.mapAngle !== 45) {
+                        alert('请选择有效的角度：0° 或 45°');
+                        return;
+                    }
 
-                // reset highlighted layers when regenerate
-                this.highlightedLayers.clear();
-                this.updateLayerSelectSelection();
+                    // 新增校验：实际像素长度 (maxCoord + 1) 必须能被格子边长整除，否则停止生成并提示
+                    const msgs = [];
+                    if (this.actualMapWidth % this.cellSize !== 0) {
+                        msgs.push(`(宽) 实际像素长度 ${this.actualMapWidth} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapWidth % this.cellSize}`);
+                    }
+                    if (this.actualMapHeight % this.cellSize !== 0) {
+                        msgs.push(`(高) 实际像素长度 ${this.actualMapHeight} 不能被格子边长 ${this.cellSize} 整除，余数: ${this.actualMapHeight % this.cellSize}`);
+                    }
+                    if (msgs.length) {
+                        alert(msgs.join('\n') + '\n请调整参数 (注意：输入为最大坐标，实际像素长度 = 最大坐标 + 1)。');
+                        return;
+                    }
 
-                this.updateCanvasSize();
-                this.drawMap();
-                this.updatePresetButtons();
-            }
+                    // 计算行列（使用实际像素长度 / 格子尺寸）
+                    this.cols = this.actualMapWidth / this.cellSize;
+                    this.rows = this.actualMapHeight / this.cellSize;
 
-            generateCellsSpiral() {
-                this.cells = [];
-                let cellId = 1;
-                const layers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+                    // 生成格子（螺旋）
+                    this.generateCellsSpiral();
 
-                for (let layer = 0; layer < layers; layer++) {
-                    const topRow = this.rows - 1 - layer;
-                    const bottomRow = layer;
-                    const leftCol = layer;
-                    const rightCol = this.cols - 1 - layer;
+                    // 初始化 cell.resources（每次生成都会清空之前的资源分配）
+                    for (const c of this.cells) {
+                        c.resources = []; // 每项为 { type, id, qty }
+                    }
 
-                    for (let col = leftCol; col <= rightCol; col++) this.addCell(bottomRow, col, cellId++);
-                    for (let row = bottomRow + 1; row <= topRow; row++) this.addCell(row, rightCol, cellId++);
-                    for (let col = rightCol - 1; col >= leftCol; col--) this.addCell(topRow, col, cellId++);
-                    for (let row = topRow - 1; row > bottomRow; row--) this.addCell(row, leftCol, cellId++);
+                    // 计算圈层数（最大圈层）
+                    this.maxLayers = Math.ceil(Math.min(this.rows, this.cols) / 2);
+
+                    // 初始化层列表选择框
+                    this.updateLayerSelect();
+
+                    // Fit by available viewport height so map shows fully without vertical scroll
+                    const viewportHeight = window.innerHeight;
+                    const containerRect = this.canvasContainer.getBoundingClientRect();
+                    // available height below the top of the canvas container (leave small margin)
+                    const availableHeight = Math.max(100, viewportHeight - containerRect.top - 20);
+
+                    // fitZoom based on实际像素高度
+                    const fitZoom = availableHeight / this.actualMapHeight;
+                    this.zoom = Math.min(1, fitZoom);
+
+                    // reset highlighted layers when regenerate
+                    this.highlightedLayers.clear();
+                    this.updateLayerSelectSelection();
+
+                    this.updateCanvasSize();
+                    this.drawMap();
+                    this.updatePresetButtons();
                 }
-            }
 
-            addCell(row, col, id) {
-                const cellSizeMinusOne = this.cellSize - 1;
-                const originalCoordinates = [
-                    [col * this.cellSize, row * this.cellSize],
-                    [col * this.cellSize, row * this.cellSize + cellSizeMinusOne],
-                    [col * this.cellSize + cellSizeMinusOne, row * this.cellSize + cellSizeMinusOne],
-                    [col * this.cellSize + cellSizeMinusOne, row * this.cellSize]
-                ];
+                generateCellsSpiral() {
+                    this.cells = [];
+                    let cellId = 1;
+                    const layers = Math.ceil(Math.min(this.rows, this.cols) / 2);
 
-                // 计算该格子的圈层（从0开始）
-                const layer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+                    for (let layer = 0; layer < layers; layer++) {
+                        const topRow = this.rows - 1 - layer;
+                        const bottomRow = layer;
+                        const leftCol = layer;
+                        const rightCol = this.cols - 1 - layer;
 
-                if (this.mapAngle === 0) {
+                        for (let col = leftCol; col <= rightCol; col++) this.addCell(bottomRow, col, cellId++);
+                        for (let row = bottomRow + 1; row <= topRow; row++) this.addCell(row, rightCol, cellId++);
+                        for (let col = rightCol - 1; col >= leftCol; col--) this.addCell(topRow, col, cellId++);
+                        for (let row = topRow - 1; row > bottomRow; row--) this.addCell(row, leftCol, cellId++);
+                    }
+                }
+
+                addCell(row, col, id) {
+                    const cellSizeMinusOne = this.cellSize - 1;
+                    const originalCoordinates = [
+                        [col * this.cellSize, row * this.cellSize],
+                        [col * this.cellSize, row * this.cellSize + cellSizeMinusOne],
+                        [col * this.cellSize + cellSizeMinusOne, row * this.cellSize + cellSizeMinusOne],
+                        [col * this.cellSize + cellSizeMinusOne, row * this.cellSize]
+                    ];
+
+                    // 计算该格子的圈层（从0开始）
+                    const layer = Math.min(row, col, this.rows - 1 - row, this.cols - 1 - col);
+
+                    if (this.mapAngle === 0) {
+                        this.cells.push({
+                            id, row, col, layer,
+                            x: col * this.cellSize,
+                            y: row * this.cellSize,
+                            coordinates: originalCoordinates,
+                            originalCoordinates,
+                            resources: []
+                        });
+                        return;
+                    }
+
+                    const angleRad = this.mapAngle * Math.PI / 180;
+                    const cosAngle = Math.cos(angleRad);
+                    const sinAngle = Math.sin(angleRad);
+
+                    const coordinates = originalCoordinates.map(([x, y]) => {
+                        const tx = x * cosAngle - y * sinAngle;
+                        const ty = x * sinAngle + y * cosAngle;
+                        return [tx, ty];
+                    });
+
                     this.cells.push({
                         id, row, col, layer,
                         x: col * this.cellSize,
                         y: row * this.cellSize,
-                        coordinates: originalCoordinates,
+                        coordinates,
                         originalCoordinates,
                         resources: []
                     });
-                    return;
                 }
 
-                const angleRad = this.mapAngle * Math.PI / 180;
-                const cosAngle = Math.cos(angleRad);
-                const sinAngle = Math.sin(angleRad);
-
-                const coordinates = originalCoordinates.map(([x, y]) => {
-                    const tx = x * cosAngle - y * sinAngle;
-                    const ty = x * sinAngle + y * cosAngle;
-                    return [tx, ty];
-                });
-
-                this.cells.push({
-                    id, row, col, layer,
-                    x: col * this.cellSize,
-                    y: row * this.cellSize,
-                    coordinates,
-                    originalCoordinates,
-                    resources: []
-                });
-            }
-
-            updateCanvasSize() {
-                if (this.mapAngle === 0) {
-                    const cssWidth = this.actualMapWidth * this.zoom;
-                    const cssHeight = this.actualMapHeight * this.zoom;
-                    this.canvas.width = Math.round(cssWidth * this.dpr);
-                    this.canvas.height = Math.round(cssHeight * this.dpr);
-                    this.canvas.style.width = cssWidth + 'px';
-                    this.canvas.style.height = cssHeight + 'px';
-                    this.mapOffsetX = 0;
-                    this.mapOffsetY = 0;
-                } else {
-                    const angleRad = -this.mapAngle * Math.PI / 180;
-                    const cosAngle = Math.cos(angleRad);
-                    const sinAngle = Math.sin(angleRad);
-
-                    const corners = [
-                        [0, 0],
-                        [0, this.actualMapHeight],
-                        [this.actualMapWidth, this.actualMapHeight],
-                        [this.actualMapWidth, 0]
-                    ];
-
-                    const transformed = corners.map(([x, y]) => {
-                        return [x * cosAngle - y * sinAngle, x * sinAngle + y * cosAngle];
-                    });
-
-                    const minX = Math.min(...transformed.map(c => c[0]));
-                    const maxX = Math.max(...transformed.map(c => c[0]));
-                    const minY = Math.min(...transformed.map(c => c[1]));
-                    const maxY = Math.max(...transformed.map(c => c[1]));
-
-                    const padding = 20;
-                    const cssWidth = (maxX - minX + padding * 2) * this.zoom;
-                    const cssHeight = (maxY - minY + padding * 2) * this.zoom;
-
-                    this.canvas.width = Math.round(cssWidth * this.dpr);
-                    this.canvas.height = Math.round(cssHeight * this.dpr);
-                    this.canvas.style.width = cssWidth + 'px';
-                    this.canvas.style.height = cssHeight + 'px';
-
-                    this.mapOffsetX = (-minX + padding) * this.zoom;
-                    this.mapOffsetY = (-minY + padding) * this.zoom;
-                }
-
-                // If canvas CSS width exceeds container, scale CSS down to fit (not internal pixels)
-                const containerRect = this.canvasContainer.getBoundingClientRect();
-                const cssW = parseFloat(this.canvas.style.width) || (this.canvas.width / this.dpr);
-                if (cssW > containerRect.width) {
-                    const scale = containerRect.width / cssW;
-                    this.canvas.style.width = (cssW * scale) + 'px';
-                    this.canvas.style.height = (parseFloat(this.canvas.style.height) * scale) + 'px';
-                }
-            }
-
-            drawMap() {
-                // clear internal pixels
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                // scale for dpr and zoom
-                this.ctx.save();
-                this.ctx.scale(this.dpr, this.dpr);
-                this.ctx.scale(this.zoom, this.zoom);
-
-                // coordinate origin: left-bottom (使用实际高度)
-                this.ctx.translate(0, this.actualMapHeight);
-                this.ctx.scale(1, -1);
-
-                // apply offset (CSS px units converted by dividing by zoom)
-                if (this.mapOffsetX !== undefined && this.mapOffsetY !== undefined) {
-                    this.ctx.translate(this.mapOffsetX / this.zoom, this.mapOffsetY / this.zoom);
-                }
-
-                // draw cells
-                for (const cell of this.cells) {
-                    this.drawCell(cell, cell === this.selectedCell);
-                }
-
-                // draw axis
-                this.drawCoordinateAxis();
-
-                this.ctx.restore();
-            }
-
-            drawCell(cell, isSelected) {
-                const { coordinates, id, row, col, layer } = cell;
-
-                // polygon style
-                this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
-                this.ctx.lineWidth = isSelected ? 2 : 1;
-
-                // determine fill: selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
-                if (isSelected) {
-                    this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-                } else if (this.excludedCells && this.excludedCells.has(cell.id)) {
-                    this.ctx.fillStyle = 'rgba(255, 235, 59, 0.5)'; // 黄色标示被剔除的格子
-                } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
-                    this.ctx.fillStyle = 'rgba(0, 128, 0, 0.25)';
-                } else {
-                    this.ctx.fillStyle = ((row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff');
-                }
-
-                // draw polygon (coordinates are in map units)
-                this.ctx.beginPath();
-                this.ctx.moveTo(coordinates[0][0], coordinates[0][1]);
-                for (let i = 1; i < coordinates.length; i++) {
-                    this.ctx.lineTo(coordinates[i][0], coordinates[i][1]);
-                }
-                this.ctx.closePath();
-                this.ctx.fill();
-                this.ctx.stroke();
-
-                // === dynamic font sizing to avoid overflow ===
-                // compute bounding box of the polygon
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                for (const p of coordinates) {
-                    minX = Math.min(minX, p[0]);
-                    maxX = Math.max(maxX, p[0]);
-                    minY = Math.min(minY, p[1]);
-                    maxY = Math.max(maxY, p[1]);
-                }
-                const boxWidth = maxX - minX;
-                const boxHeight = maxY - minY;
-
-                // padding inside the box (percentage of min dimension)
-                const paddingRatio = 0.12;
-                const padding = Math.max(1, Math.min(boxWidth, boxHeight) * paddingRatio);
-
-                // choose an initial font size based on boxHeight (map units)
-                const minFont = 6; // minimal readable font in map units
-                const maxFont = Math.max(10, Math.floor(Math.min(boxWidth, boxHeight) * 0.6));
-                let fontSize = Math.min(maxFont, Math.max(minFont, Math.round(boxHeight * 0.5)));
-
-                // set text properties after flipping back to normal orientation for text measuring/drawing
-                this.ctx.save();
-                // flip so text draws upright (we are in a flipped coordinate system)
-                this.ctx.scale(1, -1);
-
-                const text = id.toString();
-                const targetMaxWidth = Math.max(1, boxWidth - 2 * padding);
-
-                // reduce font size until text width fits targetMaxWidth
-                do {
-                    this.ctx.font = `${fontSize}px Arial`;
-                    const metrics = this.ctx.measureText(text);
-                    const textWidth = metrics.width;
-                    if (textWidth <= targetMaxWidth) break;
-                    fontSize = Math.max(minFont, fontSize - 1);
-                } while (fontSize > minFont);
-
-                // final draw text centered
-                this.ctx.fillStyle = isSelected ? '#ff0000' : '#666';
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
-                const centerX = (minX + maxX) / 2;
-                const centerY = (minY + maxY) / 2;
-                this.ctx.fillText(text, centerX, -centerY);
-
-                // 如果该格有资源或怪物，在格子中心下方显示简短标识 (显示已分配项数)
-                if (cell.resources && cell.resources.length > 0) {
-                    const resText = cell.resources.length > 1 ? `${cell.resources.length}A` : `${cell.resources[0].id}`;
-                    // 使用较小字号显示
-                    this.ctx.font = `${Math.max(8, Math.round(fontSize * 0.45))}px Arial`;
-                    this.ctx.fillStyle = '#b00000';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.textBaseline = 'top';
-                    // 在 id 的下方画
-                    this.ctx.fillText(resText, centerX, -centerY + Math.max(8, fontSize * 0.6));
-                }
-
-                this.ctx.restore();
-            }
-
-            drawCoordinateAxis() {
-                this.ctx.strokeStyle = '#000';
-                this.ctx.lineWidth = 2;
-                // X axis
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, 0);
-                this.ctx.lineTo(this.actualMapWidth, 0);
-                this.ctx.stroke();
-                // Y axis
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, 0);
-                this.ctx.lineTo(0, this.actualMapHeight);
-                this.ctx.stroke();
-
-                const fontSize = Math.max(10, Math.min(16, 14 * Math.sqrt(this.zoom)));
-                this.ctx.save();
-                this.ctx.scale(1, -1);
-                this.ctx.fillStyle = '#000';
-                this.ctx.font = `${fontSize}px Arial`;
-                this.ctx.textAlign = 'left';
-                this.ctx.textBaseline = 'middle';
-                this.ctx.fillText('0,0', 10, -10);
-                this.ctx.fillText('X', this.actualMapWidth - 15, -10);
-                this.ctx.fillText('Y', 10, -(this.actualMapHeight - 10));
-                this.ctx.restore();
-            }
-
-            // helper: map event to map coordinates
-            getEventMapCoordinates(event) {
-                const rect = this.canvas.getBoundingClientRect();
-                const screenX = event.clientX - rect.left;
-                const screenY = event.clientY - rect.top;
-                return this.screenToMapCoordinates(screenX, screenY, rect);
-            }
-
-            // convert CSS pixel coords (relative to canvas) to map coords
-            screenToMapCoordinates(screenX, screenY, rect) {
-                if (!rect) rect = this.canvas.getBoundingClientRect();
-                const scaleX = this.canvas.width / rect.width;
-                const scaleY = this.canvas.height / rect.height;
-                const internalX = screenX * scaleX;
-                const internalY = screenY * scaleY;
-                // internal -> user/map coords (internal units are css*dpr)
-                let x = internalX / (this.dpr * this.zoom);
-                let y = internalY / (this.dpr * this.zoom);
-                // reverse applied offsets and flips
-                x -= this.mapOffsetX / this.zoom;
-                y -= this.mapOffsetY / this.zoom;
-                // 使用实际高度进行反转
-                y = this.actualMapHeight - y;
-                if (this.mapAngle !== 0) {
-                    const angleRad = -this.mapAngle * Math.PI / 180;
-                    const cosA = Math.cos(angleRad);
-                    const sinA = Math.sin(angleRad);
-                    const rx = x * cosA - y * sinA;
-                    const ry = x * sinA + y * cosA;
-                    x = rx; y = ry;
-                }
-                return { x, y };
-            }
-
-            handleCanvasClick(event) {
-                const { x, y } = this.getEventMapCoordinates(event);
-                const clicked = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
-                if (clicked) {
-                    // 如果在剔除模式下，切换格子的剔除状态
-                    if (this.excludeMode) {
-                        if (this.excludedCells.has(clicked.id)) {
-                            this.excludedCells.delete(clicked.id);
-                        } else {
-                            this.excludedCells.add(clicked.id);
-                        }
-                        this.drawMap();
+                updateCanvasSize() {
+                    if (this.mapAngle === 0) {
+                        const cssWidth = this.actualMapWidth * this.zoom;
+                        const cssHeight = this.actualMapHeight * this.zoom;
+                        this.canvas.width = Math.round(cssWidth * this.dpr);
+                        this.canvas.height = Math.round(cssHeight * this.dpr);
+                        this.canvas.style.width = cssWidth + 'px';
+                        this.canvas.style.height = cssHeight + 'px';
+                        this.mapOffsetX = 0;
+                        this.mapOffsetY = 0;
                     } else {
-                        // 正常选择模式
-                        this.selectedCell = clicked;
-                        this.updateCellInfo(clicked);
-                        this.drawMap();
+                        const angleRad = -this.mapAngle * Math.PI / 180;
+                        const cosAngle = Math.cos(angleRad);
+                        const sinAngle = Math.sin(angleRad);
+
+                        const corners = [
+                            [0, 0],
+                            [0, this.actualMapHeight],
+                            [this.actualMapWidth, this.actualMapHeight],
+                            [this.actualMapWidth, 0]
+                        ];
+
+                        const transformed = corners.map(([x, y]) => {
+                            return [x * cosAngle - y * sinAngle, x * sinAngle + y * cosAngle];
+                        });
+
+                        const minX = Math.min(...transformed.map(c => c[0]));
+                        const maxX = Math.max(...transformed.map(c => c[0]));
+                        const minY = Math.min(...transformed.map(c => c[1]));
+                        const maxY = Math.max(...transformed.map(c => c[1]));
+
+                        const padding = 20;
+                        const cssWidth = (maxX - minX + padding * 2) * this.zoom;
+                        const cssHeight = (maxY - minY + padding * 2) * this.zoom;
+
+                        this.canvas.width = Math.round(cssWidth * this.dpr);
+                        this.canvas.height = Math.round(cssHeight * this.dpr);
+                        this.canvas.style.width = cssWidth + 'px';
+                        this.canvas.style.height = cssHeight + 'px';
+
+                        this.mapOffsetX = (-minX + padding) * this.zoom;
+                        this.mapOffsetY = (-minY + padding) * this.zoom;
+                    }
+
+                    // If canvas CSS width exceeds container, scale CSS down to fit (not internal pixels)
+                    const containerRect = this.canvasContainer.getBoundingClientRect();
+                    const cssW = parseFloat(this.canvas.style.width) || (this.canvas.width / this.dpr);
+                    if (cssW > containerRect.width) {
+                        const scale = containerRect.width / cssW;
+                        this.canvas.style.width = (cssW * scale) + 'px';
+                        this.canvas.style.height = (parseFloat(this.canvas.style.height) * scale) + 'px';
                     }
                 }
-            }
 
-            handleCanvasHover(event) {
-                const { x, y } = this.getEventMapCoordinates(event);
-                const hovered = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
-                this.canvas.style.cursor = hovered ? 'pointer' : 'crosshair';
-            }
+                drawMap() {
+                    // clear internal pixels
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-            isPointInPolygon(x, y, polygon) {
-                let inside = false;
-                const n = polygon.length;
-                for (let i = 0, j = n - 1; i < n; j = i++) {
-                    const xi = polygon[i][0], yi = polygon[i][1];
-                    const xj = polygon[j][0], yj = polygon[j][1];
-                    const intersect = ((yi > y) !== (yj > y)) && (x < (xi - xj) * (y - yi) / (yj - yi) + xi);
-                    if (intersect) inside = !inside;
+                    // scale for dpr and zoom
+                    this.ctx.save();
+                    this.ctx.scale(this.dpr, this.dpr);
+                    this.ctx.scale(this.zoom, this.zoom);
+
+                    // coordinate origin: left-bottom (使用实际高度)
+                    this.ctx.translate(0, this.actualMapHeight);
+                    this.ctx.scale(1, -1);
+
+                    // apply offset (CSS px units converted by dividing by zoom)
+                    if (this.mapOffsetX !== undefined && this.mapOffsetY !== undefined) {
+                        this.ctx.translate(this.mapOffsetX / this.zoom, this.mapOffsetY / this.zoom);
+                    }
+
+                    // draw cells
+                    for (const cell of this.cells) {
+                        this.drawCell(cell, cell === this.selectedCell);
+                    }
+
+                    // draw axis
+                    this.drawCoordinateAxis();
+
+                    this.ctx.restore();
                 }
-                return inside;
-            }
 
-            updateCellInfo(cell) {
-				const { id, row, col, originalCoordinates, layer } = cell;
-				const coordText = originalCoordinates.map((coord, index) => {
-					const labels = ['左下角', '左上角', '右上角', '右下角'];
-					const rounded = [Math.round(coord[0]), Math.round(coord[1])];
-					return `${labels[index]}: (${rounded[0]}, ${rounded[1]})`;
-				}).join('<br>');
+                drawCell(cell, isSelected) {
+                    const { coordinates, id, row, col, layer } = cell;
 
-				const layerDisplay = layer + 1;
-				const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
+                    // polygon style
+                    this.ctx.strokeStyle = isSelected ? '#ff0000' : '#333';
+                    this.ctx.lineWidth = isSelected ? 2 : 1;
 
-				// 资源显示 —— 显示为 "name: 数量"，每条单独一行，合并相同 id 的数量
-				let resHtml = '';
-				if (cell.resources && cell.resources.length > 0) {
-					// 合并相同 id 的数量
-					const counts = {};
-					for (const r of cell.resources) {
-						const idStr = String(r.id);
-						const qty = (r.qty != null) ? Number(r.qty) : ((r.quantity != null) ? Number(r.quantity) : 1);
-						counts[idStr] = (counts[idStr] || 0) + (isNaN(qty) ? 1 : qty);
-					}
+                    // determine fill: selected -> red; excluded -> yellow; highlighted layer -> green; otherwise checker
+                    if (isSelected) {
+                        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                    } else if (this.excludedCells && this.excludedCells.has(cell.id)) {
+                        this.ctx.fillStyle = 'rgba(255, 235, 59, 0.5)'; // 黄色标示被剔除的格子
+                    } else if (this.highlightedLayers && this.highlightedLayers.has(layer)) {
+                        this.ctx.fillStyle = 'rgba(0, 128, 0, 0.25)';
+                    } else {
+                        this.ctx.fillStyle = ((row + col) % 2 === 0 ? '#f9f9f9' : '#ffffff');
+                    }
 
-					const items = Object.entries(counts).map(([itemId, totalQty]) => {
-						const found = (this.allItems || []).find(a => String(a.id) === String(itemId));
-						const name = found ? found.name : itemId;
-						return `${name}: ${totalQty}`;
-					});
+                    // draw polygon (coordinates are in map units)
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(coordinates[0][0], coordinates[0][1]);
+                    for (let i = 1; i < coordinates.length; i++) {
+                        this.ctx.lineTo(coordinates[i][0], coordinates[i][1]);
+                    }
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    this.ctx.stroke();
 
-					resHtml = `<br><strong>已分配项:</strong><br>${items.join('<br>')}`;
-				}
+                    // === dynamic font sizing to avoid overflow ===
+                    // compute bounding box of the polygon
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    for (const p of coordinates) {
+                        minX = Math.min(minX, p[0]);
+                        maxX = Math.max(maxX, p[0]);
+                        minY = Math.min(minY, p[1]);
+                        maxY = Math.max(maxY, p[1]);
+                    }
+                    const boxWidth = maxX - minX;
+                    const boxHeight = maxY - minY;
 
-				document.getElementById('cellInfo').innerHTML = `
+                    // padding inside the box (percentage of min dimension)
+                    const paddingRatio = 0.12;
+                    const padding = Math.max(1, Math.min(boxWidth, boxHeight) * paddingRatio);
+
+                    // choose an initial font size based on boxHeight (map units)
+                    const minFont = 6; // minimal readable font in map units
+                    const maxFont = Math.max(10, Math.floor(Math.min(boxWidth, boxHeight) * 0.6));
+                    let fontSize = Math.min(maxFont, Math.max(minFont, Math.round(boxHeight * 0.5)));
+
+                    // set text properties after flipping back to normal orientation for text measuring/drawing
+                    this.ctx.save();
+                    // flip so text draws upright (we are in a flipped coordinate system)
+                    this.ctx.scale(1, -1);
+
+                    const text = id.toString();
+                    const targetMaxWidth = Math.max(1, boxWidth - 2 * padding);
+
+                    // reduce font size until text width fits targetMaxWidth
+                    do {
+                        this.ctx.font = `${fontSize}px Arial`;
+                        const metrics = this.ctx.measureText(text);
+                        const textWidth = metrics.width;
+                        if (textWidth <= targetMaxWidth) break;
+                        fontSize = Math.max(minFont, fontSize - 1);
+                    } while (fontSize > minFont);
+
+                    // final draw text centered
+                    this.ctx.fillStyle = isSelected ? '#ff0000' : '#666';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    const centerX = (minX + maxX) / 2;
+                    const centerY = (minY + maxY) / 2;
+                    this.ctx.fillText(text, centerX, -centerY);
+
+                    // 如果该格有资源或怪物，在格子中心下方显示简短标识 (显示已分配项数)
+                    if (cell.resources && cell.resources.length > 0) {
+                        const resText = cell.resources.length > 1 ? `${cell.resources.length}A` : `${cell.resources[0].id}`;
+                        // 使用较小字号显示
+                        this.ctx.font = `${Math.max(8, Math.round(fontSize * 0.45))}px Arial`;
+                        this.ctx.fillStyle = '#b00000';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'top';
+                        // 在 id 的下方画
+                        this.ctx.fillText(resText, centerX, -centerY + Math.max(8, fontSize * 0.6));
+                    }
+
+                    this.ctx.restore();
+                }
+
+                drawCoordinateAxis() {
+                    this.ctx.strokeStyle = '#000';
+                    this.ctx.lineWidth = 2;
+                    // X axis
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 0);
+                    this.ctx.lineTo(this.actualMapWidth, 0);
+                    this.ctx.stroke();
+                    // Y axis
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 0);
+                    this.ctx.lineTo(0, this.actualMapHeight);
+                    this.ctx.stroke();
+
+                    const fontSize = Math.max(10, Math.min(16, 14 * Math.sqrt(this.zoom)));
+                    this.ctx.save();
+                    this.ctx.scale(1, -1);
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.font = `${fontSize}px Arial`;
+                    this.ctx.textAlign = 'left';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText('0,0', 10, -10);
+                    this.ctx.fillText('X', this.actualMapWidth - 15, -10);
+                    this.ctx.fillText('Y', 10, -(this.actualMapHeight - 10));
+                    this.ctx.restore();
+                }
+
+                // helper: map event to map coordinates
+                getEventMapCoordinates(event) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const screenX = event.clientX - rect.left;
+                    const screenY = event.clientY - rect.top;
+                    return this.screenToMapCoordinates(screenX, screenY, rect);
+                }
+
+                // convert CSS pixel coords (relative to canvas) to map coords
+                screenToMapCoordinates(screenX, screenY, rect) {
+                    if (!rect) rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    const internalX = screenX * scaleX;
+                    const internalY = screenY * scaleY;
+                    // internal -> user/map coords (internal units are css*dpr)
+                    let x = internalX / (this.dpr * this.zoom);
+                    let y = internalY / (this.dpr * this.zoom);
+                    // reverse applied offsets and flips
+                    x -= this.mapOffsetX / this.zoom;
+                    y -= this.mapOffsetY / this.zoom;
+                    // 使用实际高度进行反转
+                    y = this.actualMapHeight - y;
+                    if (this.mapAngle !== 0) {
+                        const angleRad = -this.mapAngle * Math.PI / 180;
+                        const cosA = Math.cos(angleRad);
+                        const sinA = Math.sin(angleRad);
+                        const rx = x * cosA - y * sinA;
+                        const ry = x * sinA + y * cosA;
+                        x = rx; y = ry;
+                    }
+                    return { x, y };
+                }
+
+                handleCanvasClick(event) {
+                    const { x, y } = this.getEventMapCoordinates(event);
+                    const clicked = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
+                    if (clicked) {
+                        // 如果在剔除模式下，切换格子的剔除状态
+                        if (this.excludeMode) {
+                            if (this.excludedCells.has(clicked.id)) {
+                                this.excludedCells.delete(clicked.id);
+                            } else {
+                                this.excludedCells.add(clicked.id);
+                            }
+                            this.drawMap();
+                        } else {
+                            // 正常选择模式
+                            this.selectedCell = clicked;
+                            this.updateCellInfo(clicked);
+                            this.drawMap();
+                        }
+                    }
+                }
+
+                handleCanvasHover(event) {
+                    const { x, y } = this.getEventMapCoordinates(event);
+                    const hovered = this.cells.find(cell => this.isPointInPolygon(x, y, cell.coordinates));
+                    this.canvas.style.cursor = hovered ? 'pointer' : 'crosshair';
+                }
+
+                isPointInPolygon(x, y, polygon) {
+                    let inside = false;
+                    const n = polygon.length;
+                    for (let i = 0, j = n - 1; i < n; j = i++) {
+                        const xi = polygon[i][0], yi = polygon[i][1];
+                        const xj = polygon[j][0], yj = polygon[j][1];
+                        const intersect = ((yi > y) !== (yj > y)) && (x < (xi - xj) * (y - yi) / (yj - yi) + xi);
+                        if (intersect) inside = !inside;
+                    }
+                    return inside;
+                }
+
+                updateCellInfo(cell) {
+                    const { id, row, col, originalCoordinates, layer } = cell;
+                    const coordText = originalCoordinates.map((coord, index) => {
+                        const labels = ['左下角', '左上角', '右上角', '右下角'];
+                        const rounded = [Math.round(coord[0]), Math.round(coord[1])];
+                        return `${labels[index]}: (${rounded[0]}, ${rounded[1]})`;
+                    }).join('<br>');
+
+                    const layerDisplay = layer + 1;
+                    const angleInfo = this.mapAngle > 0 ? `<br><strong>倾斜角度:</strong> ${this.mapAngle}°` : '';
+
+                    // 资源显示 —— 显示为 "name: 数量"，每条单独一行，合并相同 id 的数量
+                    let resHtml = '';
+                    if (cell.resources && cell.resources.length > 0) {
+                        // 合并相同 id 的数量
+                        const counts = {};
+                        for (const r of cell.resources) {
+                            const idStr = String(r.id);
+                            const qty = (r.qty != null) ? Number(r.qty) : ((r.quantity != null) ? Number(r.quantity) : 1);
+                            counts[idStr] = (counts[idStr] || 0) + (isNaN(qty) ? 1 : qty);
+                        }
+
+                        const items = Object.entries(counts).map(([itemId, totalQty]) => {
+                            const found = (this.allItems || []).find(a => String(a.id) === String(itemId));
+                            const name = found ? found.name : itemId;
+                            return `${name}: ${totalQty}`;
+                        });
+
+                        resHtml = `<br><strong>已分配项:</strong><br>${items.join('<br>')}`;
+                    }
+
+                    document.getElementById('cellInfo').innerHTML = `
 					<strong>格子 #${id}</strong><br>
 					位置: 第${row + 1}行, 第${col + 1}列<br>
 					圈层: 第${layerDisplay}圈${angleInfo}<br>
@@ -1164,548 +1179,620 @@
 					${coordText}
 					${resHtml}
 				`;
-			}
+                }
 
-            changeZoom(delta) {
-                const newZoom = Math.max(0.1, Math.min(3, this.zoom + delta));
-                if (newZoom !== this.zoom) {
-                    this.zoom = newZoom;
-                    this.updateCanvasSize();
+                changeZoom(delta) {
+                    const newZoom = Math.max(0.1, Math.min(3, this.zoom + delta));
+                    if (newZoom !== this.zoom) {
+                        this.zoom = newZoom;
+                        this.updateCanvasSize();
+                        this.drawMap();
+                    }
+                }
+
+                resetZoom() {
+                    if (this.zoom !== 1) {
+                        this.zoom = 1;
+                        this.updateCanvasSize();
+                        this.drawMap();
+                    }
+                }
+
+                handleMouseDown(event) {
+                    if (event.button === 2) {
+                        this.isDragging = true;
+                        this.dragStartX = event.clientX;
+                        this.dragStartY = event.clientY;
+                        this.canvas.style.cursor = 'grabbing';
+                        event.preventDefault();
+                    }
+                }
+
+                handleMouseMove(event) {
+                    if (this.isDragging) {
+                        const deltaX = event.clientX - this.dragStartX;
+                        const deltaY = event.clientY - this.dragStartY;
+                        // mapOffset in CSS px
+                        this.mapOffsetX += deltaX;
+                        this.mapOffsetY -= deltaY;
+                        this.dragStartX = event.clientX;
+                        this.dragStartY = event.clientY;
+                        this.drawMap();
+                        event.preventDefault();
+                    } else {
+                        this.handleCanvasHover(event);
+                    }
+                }
+
+                handleMouseUp(event) {
+                    if (this.isDragging) {
+                        this.isDragging = false;
+                        this.canvas.style.cursor = 'crosshair';
+                    }
+                }
+
+                // 填充圈层选择框
+                updateLayerSelect() {
+                    const select = document.getElementById('layerSelect');
+                    select.innerHTML = '';
+                    const layers = this.maxLayers || Math.ceil(Math.min(this.rows || 0, this.cols || 0) / 2);
+                    for (let i = 0; i < layers; i++) {
+                        const opt = document.createElement('option');
+                        opt.value = String(i); // 存储为零基索引
+                        opt.text = `第 ${i + 1} 圈`;
+                        select.appendChild(opt);
+                    }
+                }
+
+                updateLayerSelectSelection() {
+                    // no-op for now; kept for compatibility
+                }
+
+                applyLayerHighlight() {
+                    const sel = document.getElementById('layerSelect');
+                    const selected = Array.from(sel.selectedOptions).map(o => Number(o.value));
+                    this.highlightedLayers.clear();
+                    for (const s of selected) this.highlightedLayers.add(s);
                     this.drawMap();
                 }
-            }
 
-            resetZoom() {
-                if (this.zoom !== 1) {
-                    this.zoom = 1;
-                    this.updateCanvasSize();
+                clearLayerHighlight() {
+                    this.highlightedLayers.clear();
+                    const sel = document.getElementById('layerSelect');
+                    for (const o of Array.from(sel.options)) o.selected = false;
                     this.drawMap();
                 }
-            }
+                // apply selected items (from monster/resource select) to the currently selected cell
+                applyItemsToSelectedCell(type) {
+                    if (!this.selectedCell) {
+                        alert('请先在画布上选择一个格子再使用此功能。');
+                        return;
+                    }
+                    const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                    const qtyInput = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
+                    const selectedOpts = Array.from(select.selectedOptions || []);
+                    if (selectedOpts.length === 0) {
+                        alert('请先在列表中选择一个或多个项。');
+                        return;
+                    }
 
-            handleMouseDown(event) {
-                if (event.button === 2) {
-                    this.isDragging = true;
-                    this.dragStartX = event.clientX;
-                    this.dragStartY = event.clientY;
-                    this.canvas.style.cursor = 'grabbing';
-                    event.preventDefault();
-                }
-            }
-
-            handleMouseMove(event) {
-                if (this.isDragging) {
-                    const deltaX = event.clientX - this.dragStartX;
-                    const deltaY = event.clientY - this.dragStartY;
-                    // mapOffset in CSS px
-                    this.mapOffsetX += deltaX;
-                    this.mapOffsetY -= deltaY;
-                    this.dragStartX = event.clientX;
-                    this.dragStartY = event.clientY;
-                    this.drawMap();
-                    event.preventDefault();
-                } else {
-                    this.handleCanvasHover(event);
-                }
-            }
-
-            handleMouseUp(event) {
-                if (this.isDragging) {
-                    this.isDragging = false;
-                    this.canvas.style.cursor = 'crosshair';
-                }
-            }
-
-            // 填充圈层选择框
-            updateLayerSelect() {
-                const select = document.getElementById('layerSelect');
-                select.innerHTML = '';
-                const layers = this.maxLayers || Math.ceil(Math.min(this.rows || 0, this.cols || 0) / 2);
-                for (let i = 0; i < layers; i++) {
-                    const opt = document.createElement('option');
-                    opt.value = String(i); // 存储为零基索引
-                    opt.text = `第 ${i + 1} 圈`;
-                    select.appendChild(opt);
-                }
-            }
-
-            updateLayerSelectSelection() {
-                // no-op for now; kept for compatibility
-            }
-
-            applyLayerHighlight() {
-                const sel = document.getElementById('layerSelect');
-                const selected = Array.from(sel.selectedOptions).map(o => Number(o.value));
-                this.highlightedLayers.clear();
-                for (const s of selected) this.highlightedLayers.add(s);
-                this.drawMap();
-            }
-
-            clearLayerHighlight() {
-                this.highlightedLayers.clear();
-                const sel = document.getElementById('layerSelect');
-                for (const o of Array.from(sel.options)) o.selected = false;
-                this.drawMap();
-            }
-			// apply selected items (from monster/resource select) to the currently selected cell
-			applyItemsToSelectedCell(type) {
-				if (!this.selectedCell) {
-					alert('请先在画布上选择一个格子再使用此功能。');
-					return;
-				}
-				const select = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
-				const qtyInput = (type === 1) ? document.getElementById('monsterQuantity') : document.getElementById('resourceQuantity');
-				const selectedOpts = Array.from(select.selectedOptions || []);
-				if (selectedOpts.length === 0) {
-					alert('请先在列表中选择一个或多个项。');
-					return;
-				}
-
-				// for each selected option, get id and quantity (prefer option.dataset.qty; fallback to qtyInput)
-				for (const opt of selectedOpts) {
-					const idStr = opt.value;
-					let qty = null;
-					// prefer dataset qty (set by setItemQuantity), else use qtyInput.value, else default 1
-					if (opt.dataset && opt.dataset.qty != null && opt.dataset.qty !== '') {
-						qty = parseInt(opt.dataset.qty);
-					} else {
-						qty = parseInt(qtyInput.value);
-					}
-					if (isNaN(qty)) qty = 0; // 允许负数，用于移除资源
-
-					// merge into selectedCell.resources:
-					// if same type+id exists, increase qty (negative numbers will reduce)
-					const existing = this.selectedCell.resources.find(r => String(r.type) === String(type) && String(r.id) === String(idStr));
-					if (existing) {
-						existing.qty = (Number(existing.qty) || 0) + qty;
-					} else if (qty > 0) {
-						// 只有正数才能创建新的资源项
-						this.selectedCell.resources.push({ type: type, id: idStr, qty: qty });
-					} else if (qty < 0) {
-						// 如果试图添加负数但资源不存在，给出提示
-						alert(`无法移除不存在的资源：${idStr}，当前格子中没有该资源。`);
-					}
-				}
-
-				// 清理数量为0或负数的资源项
-				this.selectedCell.resources = this.selectedCell.resources.filter(r => r.qty > 0);
-
-				// reflect changes visually and in info panel
-				this.updateCellInfo(this.selectedCell);
-				this.drawMap();
-			}
-
-            // 将选中的怪物/资源按各自的 qty 添加到被选圈层的格子上
-            applyItemsToSelectedLayers(type) {
-                // selected layers
-                const layerSel = document.getElementById('layerSelect');
-                const selectedLayers = Array.from(layerSel.selectedOptions).map(o => Number(o.value));
-                if (selectedLayers.length === 0) {
-                    alert('请先选择至少一个圈层。');
-                    return;
-                }
-
-                const listSel = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
-                const arr = (type === 1) ? this.monsters : this.resources;
-                const selectedOpts = Array.from(listSel.selectedOptions || []);
-                if (selectedOpts.length === 0) {
-                    alert('请先在怪物/资源列表中选择要添加的项（可多选）。');
-                    return;
-                }
-
-                // for each selected item, get qty from data or underlying array
-                const itemsToApplyAll = selectedOpts.map(opt => {
-                    const idStr = String(opt.value);
-                    const found = arr.find(a => String(a.id) === idStr);
-                    const qtyRaw = (found && found.qty != null) ? Number(found.qty) : (Number(opt.dataset.qty) || 0);
-                    const qty = isNaN(qtyRaw) ? 0 : qtyRaw;
-                    return { id: idStr, qty: qty };
-                });
-
-                // 支持负数：负数用于移除资源，正数用于添加资源
-                // 只跳过完全无效（NaN）的项
-                const itemsToApply = itemsToApplyAll.filter(it => !isNaN(it.qty));
-                const invalidItems = itemsToApplyAll.length - itemsToApply.length;
-
-                if (itemsToApply.length === 0) {
-                    // All selected items have invalid quantities
-                    alert('选中的项中所有数量均无效，请输入有效的整数数量。');
-                    return;
-                }
-
-                // find all cells in selected layers
-                const targetCells = this.cells.filter(c => selectedLayers.includes(c.layer));
-                if (targetCells.length === 0) {
-                    alert('选中的圈层没有任何格子。');
-                    return;
-                }
-
-                // 处理每个格子的资源添加/移除
-                for (const cell of targetCells) {
-                    for (const it of itemsToApply) {
-                        // 查找是否已存在相同类型的资源
-                        const existingIndex = cell.resources.findIndex(r =>
-                            String(r.type) === String(type) && String(r.id) === String(it.id)
-                        );
-
-                        if (existingIndex >= 0) {
-                            // 如果已存在，增加数量（负数会减少）
-                            cell.resources[existingIndex].qty += it.qty;
-                        } else if (it.qty > 0) {
-                            // 如果不存在且数量为正数，则添加新资源
-                            cell.resources.push({ type, id: it.id, qty: it.qty });
+                    // for each selected option, get id and quantity (prefer option.dataset.qty; fallback to qtyInput)
+                    for (const opt of selectedOpts) {
+                        const idStr = opt.value;
+                        let qty = null;
+                        // prefer dataset qty (set by setItemQuantity), else use qtyInput.value, else default 1
+                        if (opt.dataset && opt.dataset.qty != null && opt.dataset.qty !== '') {
+                            qty = parseInt(opt.dataset.qty);
+                        } else {
+                            qty = parseInt(qtyInput.value);
                         }
-                        // 如果数量为负数且不存在，不需要添加（负数不能用于创建新资源，只能用于移除现有资源）
+                        if (isNaN(qty)) qty = 0; // 允许负数，用于移除资源
+
+                        // merge into selectedCell.resources:
+                        // if same type+id exists, increase qty (negative numbers will reduce)
+                        const existing = this.selectedCell.resources.find(r => String(r.type) === String(type) && String(r.id) === String(idStr));
+                        if (existing) {
+                            existing.qty = (Number(existing.qty) || 0) + qty;
+                        } else if (qty > 0) {
+                            // 只有正数才能创建新的资源项
+                            this.selectedCell.resources.push({ type: type, id: idStr, qty: qty });
+                        } else if (qty < 0) {
+                            // 如果试图添加负数但资源不存在，给出提示
+                            alert(`无法移除不存在的资源：${idStr}，当前格子中没有该资源。`);
+                        }
                     }
 
                     // 清理数量为0或负数的资源项
-                    cell.resources = cell.resources.filter(r => r.qty > 0);
+                    this.selectedCell.resources = this.selectedCell.resources.filter(r => r.qty > 0);
+
+                    // reflect changes visually and in info panel
+                    this.updateCellInfo(this.selectedCell);
+                    this.drawMap();
                 }
 
-                this.drawMap();
-
-                // 提供信息提示
-                const addedCount = itemsToApply.filter(it => it.qty > 0).length;
-                const removedCount = itemsToApply.filter(it => it.qty < 0).length;
-                let msg = `处理完成：共 ${itemsToApply.length} 项已应用到 ${targetCells.length} 个格子。`;
-                if (addedCount > 0) {
-                    msg += `\n其中 ${addedCount} 项为添加（正数数量）。`;
-                }
-                if (removedCount > 0) {
-                    msg += `\n其中 ${removedCount} 项为移除（负数数量）。`;
-                }
-                if (invalidItems > 0) {
-                    msg += `\n有 ${invalidItems} 项因数量无效被跳过。`;
-                }
-                alert(msg);
-            }
-
-            exportSeparatedData() {
-                // export monsters first then empty line then resources
-                // 汇总相同格子的数据：cellId -> {type1: [items], type2: [items]}
-                const cellDataMap = new Map();
-
-                for (const c of this.cells) {
-                    if (!c.resources || c.resources.length === 0) continue;
-
-                    if (!cellDataMap.has(c.id)) {
-                        cellDataMap.set(c.id, { monsters: [], resources: [] });
+                // 将选中的怪物/资源按各自的 qty 添加到被选圈层的格子上
+                applyItemsToSelectedLayers(type) {
+                    // selected layers
+                    const layerSel = document.getElementById('layerSelect');
+                    const selectedLayers = Array.from(layerSel.selectedOptions).map(o => Number(o.value));
+                    if (selectedLayers.length === 0) {
+                        alert('请先选择至少一个圈层。');
+                        return;
                     }
 
-                    const cellData = cellDataMap.get(c.id);
-                    for (const r of c.resources) {
-                        if (r.type === 1) {
-                            cellData.monsters.push({ id: r.id, qty: r.qty });
-                        } else if (r.type === 2) {
-                            cellData.resources.push({ id: r.id, qty: r.qty });
+                    const listSel = (type === 1) ? document.getElementById('monsterSelect') : document.getElementById('resourceSelect');
+                    const arr = (type === 1) ? this.monsters : this.resources;
+                    const selectedOpts = Array.from(listSel.selectedOptions || []);
+                    if (selectedOpts.length === 0) {
+                        alert('请先在怪物/资源列表中选择要添加的项（可多选）。');
+                        return;
+                    }
+
+                    // for each selected item, get qty from data or underlying array
+                    const itemsToApplyAll = selectedOpts.map(opt => {
+                        const idStr = String(opt.value);
+                        const found = arr.find(a => String(a.id) === idStr);
+                        const qtyRaw = (found && found.qty != null) ? Number(found.qty) : (Number(opt.dataset.qty) || 0);
+                        const qty = isNaN(qtyRaw) ? 0 : qtyRaw;
+                        return { id: idStr, qty: qty };
+                    });
+
+                    // 支持负数：负数用于移除资源，正数用于添加资源
+                    // 只跳过完全无效（NaN）的项
+                    const itemsToApply = itemsToApplyAll.filter(it => !isNaN(it.qty));
+                    const invalidItems = itemsToApplyAll.length - itemsToApply.length;
+
+                    if (itemsToApply.length === 0) {
+                        // All selected items have invalid quantities
+                        alert('选中的项中所有数量均无效，请输入有效的整数数量。');
+                        return;
+                    }
+
+                    // find all cells in selected layers
+                    const targetCells = this.cells.filter(c => selectedLayers.includes(c.layer));
+                    if (targetCells.length === 0) {
+                        alert('选中的圈层没有任何格子。');
+                        return;
+                    }
+
+                    // 处理每个格子的资源添加/移除
+                    for (const cell of targetCells) {
+                        for (const it of itemsToApply) {
+                            // 查找是否已存在相同类型的资源
+                            const existingIndex = cell.resources.findIndex(r =>
+                                String(r.type) === String(type) && String(r.id) === String(it.id)
+                            );
+
+                            if (existingIndex >= 0) {
+                                // 如果已存在，增加数量（负数会减少）
+                                cell.resources[existingIndex].qty += it.qty;
+                            } else if (it.qty > 0) {
+                                // 如果不存在且数量为正数，则添加新资源
+                                cell.resources.push({ type, id: it.id, qty: it.qty });
+                            }
+                            // 如果数量为负数且不存在，不需要添加（负数不能用于创建新资源，只能用于移除现有资源）
+                        }
+
+                        // 清理数量为0或负数的资源项
+                        cell.resources = cell.resources.filter(r => r.qty > 0);
+                    }
+
+                    this.drawMap();
+
+                    // 提供信息提示
+                    const addedCount = itemsToApply.filter(it => it.qty > 0).length;
+                    const removedCount = itemsToApply.filter(it => it.qty < 0).length;
+                    let msg = `处理完成：共 ${itemsToApply.length} 项已应用到 ${targetCells.length} 个格子。`;
+                    if (addedCount > 0) {
+                        msg += `\n其中 ${addedCount} 项为添加（正数数量）。`;
+                    }
+                    if (removedCount > 0) {
+                        msg += `\n其中 ${removedCount} 项为移除（负数数量）。`;
+                    }
+                    if (invalidItems > 0) {
+                        msg += `\n有 ${invalidItems} 项因数量无效被跳过。`;
+                    }
+                    alert(msg);
+                }
+
+                exportSeparatedData() {
+                    // export monsters first then empty line then resources
+                    // 汇总相同格子的数据：cellId -> {type1: [items], type2: [items]}
+                    const cellDataMap = new Map();
+
+                    for (const c of this.cells) {
+                        if (!c.resources || c.resources.length === 0) continue;
+
+                        if (!cellDataMap.has(c.id)) {
+                            cellDataMap.set(c.id, { monsters: [], resources: [] });
+                        }
+
+                        const cellData = cellDataMap.get(c.id);
+                        for (const r of c.resources) {
+                            if (r.type === 1) {
+                                cellData.monsters.push({ id: r.id, qty: r.qty });
+                            } else if (r.type === 2) {
+                                cellData.resources.push({ id: r.id, qty: r.qty });
+                            }
                         }
                     }
+
+                    const lines = [];
+
+                    // 导出怪物数据
+                    for (const [cellId, data] of cellDataMap) {
+                        if (data.monsters.length > 0) {
+                            const monsterParts = data.monsters.map(m => `${m.id};${m.qty}`);
+                            lines.push(`${cellId}:${monsterParts.join('|')}`);
+                        }
+                    }
+
+                    // 空行分隔
+                    lines.push('');
+
+                    // 导出资源数据
+                    for (const [cellId, data] of cellDataMap) {
+                        if (data.resources.length > 0) {
+                            const resourceParts = data.resources.map(r => `${r.id};${r.qty}`);
+                            lines.push(`${cellId}:${resourceParts.join('|')}`);
+                        }
+                    }
+
+                    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'export.txt';
+                    a.click();
+                    URL.revokeObjectURL(url);
                 }
 
-                const lines = [];
+                printData() {
+                    if (!this.cells || this.cells.length === 0) {
+                        alert('没有可导出的格子数据，请先生成地图。');
+                        return;
+                    }
 
-                // 导出怪物数据
-                for (const [cellId, data] of cellDataMap) {
-                    if (data.monsters.length > 0) {
-                        const monsterParts = data.monsters.map(m => `${m.id};${m.qty}`);
-                        lines.push(`${cellId}:${monsterParts.join('|')}`);
+                    // 格式化数据：格子编号:左下角X;左下角Y|左上角X;左上角Y|右上角X;右上角Y|右下角X;右下角Y
+                    const dataLines = this.cells.map(cell => {
+                        const coords = cell.coordinates;
+                        if (!coords || coords.length < 4) return null;
+
+                        // 左下角: [0], 左上角: [1], 右上角: [2], 右下角: [3]
+                        const lowerLeft = `${coords[0][0]};${coords[0][1]}`;
+                        const upperLeft = `${coords[1][0]};${coords[1][1]}`;
+                        const upperRight = `${coords[2][0]};${coords[2][1]}`;
+                        const lowerRight = `${coords[3][0]};${coords[3][1]}`;
+
+                        return `${cell.id}:${lowerLeft}|${upperLeft}|${upperRight}|${lowerRight}`;
+                    }).filter(line => line !== null);
+
+                    if (dataLines.length === 0) {
+                        alert('没有有效的格子坐标数据。');
+                        return;
+                    }
+
+                    // 创建坐标数据内容
+                    const coordinateContent = dataLines.join('\n');
+
+                    // 收集联盟资源数据
+                    const allianceResourcesMap = new Map();
+                    for (const cell of this.cells) {
+                        if (cell.resources && cell.resources.length > 0) {
+                            // 只处理联盟资源（type=3）
+                            const allianceResources = cell.resources.filter(r => r.type === 3);
+                            if (allianceResources.length > 0) {
+                                // 格式：格子ID:资源ID;数量|资源ID;数量
+                                const resourceData = allianceResources
+                                    .sort((a, b) => a.id - b.id) // 按资源ID排序
+                                    .map(r => `${r.id};${r.qty}`)
+                                    .join('|');
+                                allianceResourcesMap.set(cell.id, resourceData);
+                            }
+                        }
+                    }
+
+                    // 构建最终文本内容
+                    let finalContent = coordinateContent;
+
+                    // 如果有联盟资源数据，追加到文件末尾
+                    if (allianceResourcesMap.size > 0) {
+                        finalContent += '\n\n联盟资源数据：\n';
+
+                        // 按格子ID排序输出
+                        const sortedCellIds = Array.from(allianceResourcesMap.keys()).sort((a, b) => a - b);
+
+                        // 创建资源名称映射
+                        const resourceNames = {
+                            5001: '联盟农场',
+                            5002: '联盟伐木厂',
+                            5003: '联盟煤矿厂',
+                            5004: '联盟铁矿厂'
+                        };
+
+                        for (const cellId of sortedCellIds) {
+                            const resourceData = allianceResourcesMap.get(cellId);
+                            finalContent += `${cellId}:${resourceData}\n`;
+                        }
+                    }
+
+                    // 创建Blob对象并下载为txt文件
+                    const blob = new Blob([finalContent], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `map_coordinates_${new Date().getTime()}.txt`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    let message = `已导出 ${dataLines.length} 个格子的坐标数据`;
+                    if (allianceResourcesMap.size > 0) {
+                        message += `和 ${allianceResourcesMap.size} 个格子的联盟资源数据`;
+                    }
+                    message += `到文件：map_coordinates_${new Date().getTime()}.txt`;
+                    alert(message);
+                }
+
+                // === 联盟资源相关方法 ===
+
+                // 切换剔除模式
+                toggleExcludeMode() {
+                    this.excludeMode = !this.excludeMode;
+                    const btn = document.getElementById('excludeBtn');
+                    if (this.excludeMode) {
+                        btn.style.background = '#ff5722';
+                        btn.textContent = '剔除模式已激活（再次点击关闭）';
+                        this.canvas.style.cursor = 'crosshair';
+                    } else {
+                        btn.style.background = '#ffc107';
+                        btn.textContent = '点击剔除格子（激活后单击格子标黄）';
+                        this.canvas.style.cursor = 'default';
                     }
                 }
 
-                // 空行分隔
-                lines.push('');
+                // 清除所有剔除的格子
+                clearExcludedCells() {
+                    this.excludedCells.clear();
+                    this.drawMap();
+                }
 
-                // 导出资源数据
-                for (const [cellId, data] of cellDataMap) {
-                    if (data.resources.length > 0) {
-                        const resourceParts = data.resources.map(r => `${r.id};${r.qty}`);
-                        lines.push(`${cellId}:${resourceParts.join('|')}`);
+                // 生成联盟资源
+                generateAllianceResources() {
+                    // 获取输入的数量（每个格子的资源数量）
+                    const farmCount = parseInt(document.getElementById('allianceFarm').value) || 0;
+                    const woodCount = parseInt(document.getElementById('allianceWood').value) || 0;
+                    const mineCount = parseInt(document.getElementById('allianceMine').value) || 0;
+                    const ironCount = parseInt(document.getElementById('allianceIron').value) || 0;
+                    const radius = parseInt(document.getElementById('resourceRadius').value) || 0;
+
+                    if (farmCount === 0 && woodCount === 0 && mineCount === 0 && ironCount === 0) {
+                        alert('请至少输入一种资源的数量！');
+                        return;
                     }
-                }
 
-                const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'export.txt';
-                a.click();
-                URL.revokeObjectURL(url);
-            }
+                    // 清除现有的联盟资源
+                    this.clearAllianceResources(false); // 不显示提示，因为我们要显示新的统计
 
-            printData() {
-                if (!this.cells || this.cells.length === 0) {
-                    alert('没有可导出的格子数据，请先生成地图。');
-                    return;
-                }
+                    // 获取可用的格子（未被剔除的）
+                    const availableCells = this.cells.filter(cell => !this.excludedCells.has(cell.id));
 
-                // 格式化数据：格子编号:左下角X;左下角Y|左上角X;左上角Y|右上角X;右上角Y|右下角X;右下角Y
-                const dataLines = this.cells.map(cell => {
-                    const coords = cell.coordinates;
-                    if (!coords || coords.length < 4) return null;
-
-                    // 左下角: [0], 左上角: [1], 右上角: [2], 右下角: [3]
-                    const lowerLeft = `${coords[0][0]};${coords[0][1]}`;
-                    const upperLeft = `${coords[1][0]};${coords[1][1]}`;
-                    const upperRight = `${coords[2][0]};${coords[2][1]}`;
-                    const lowerRight = `${coords[3][0]};${coords[3][1]}`;
-
-                    return `${cell.id}:${lowerLeft}|${upperLeft}|${upperRight}|${lowerRight}`;
-                }).filter(line => line !== null);
-
-                if (dataLines.length === 0) {
-                    alert('没有有效的格子坐标数据。');
-                    return;
-                }
-
-                // 创建文本内容
-                const content = dataLines.join('\n');
-
-                // 创建Blob对象并下载为txt文件
-                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `map_coordinates_${new Date().getTime()}.txt`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-
-                alert(`已导出 ${dataLines.length} 个格子的坐标数据到文件：map_coordinates_${new Date().getTime()}.txt`);
-            }
-
-            // === 联盟资源相关方法 ===
-
-            // 切换剔除模式
-            toggleExcludeMode() {
-                this.excludeMode = !this.excludeMode;
-                const btn = document.getElementById('excludeBtn');
-                if (this.excludeMode) {
-                    btn.style.background = '#ff5722';
-                    btn.textContent = '剔除模式已激活（再次点击关闭）';
-                    this.canvas.style.cursor = 'crosshair';
-                } else {
-                    btn.style.background = '#ffc107';
-                    btn.textContent = '点击剔除格子（激活后单击格子标黄）';
-                    this.canvas.style.cursor = 'default';
-                }
-            }
-
-            // 清除所有剔除的格子
-            clearExcludedCells() {
-                this.excludedCells.clear();
-                this.drawMap();
-            }
-
-            // 生成联盟资源
-            generateAllianceResources() {
-                // 获取输入的数量
-                const farmCount = parseInt(document.getElementById('allianceFarm').value) || 0;
-                const woodCount = parseInt(document.getElementById('allianceWood').value) || 0;
-                const mineCount = parseInt(document.getElementById('allianceMine').value) || 0;
-                const ironCount = parseInt(document.getElementById('allianceIron').value) || 0;
-                const radius = parseInt(document.getElementById('resourceRadius').value) || 0;
-
-                if (farmCount === 0 && woodCount === 0 && mineCount === 0 && ironCount === 0) {
-                    alert('请至少输入一种资源的数量！');
-                    return;
-                }
-
-                // 清除现有的联盟资源
-                this.clearAllianceResources(false); // 不显示提示，因为我们要显示新的统计
-
-                // 准备要分配的资源
-                const resourcesToAllocate = [];
-                if (farmCount > 0) resourcesToAllocate.push({ id: 5001, name: '联盟农场', count: farmCount });
-                if (woodCount > 0) resourcesToAllocate.push({ id: 5002, name: '联盟伐木厂', count: woodCount });
-                if (mineCount > 0) resourcesToAllocate.push({ id: 5003, name: '联盟煤矿厂', count: mineCount });
-                if (ironCount > 0) resourcesToAllocate.push({ id: 5004, name: '联盟铁矿厂', count: ironCount });
-
-                // 获取可用的格子（未被剔除的）
-                const availableCells = this.cells.filter(cell => !this.excludedCells.has(cell.id));
-
-                if (availableCells.length === 0) {
-                    alert('没有可用的格子生成资源！请先清除剔除或选择其他格子。');
-                    return;
-                }
-
-                // 记录分配统计
-                const stats = {
-                    total: 0,
-                    allocated: 0,
-                    insufficient: []
-                };
-
-                // 为每种资源分配格子
-                for (const resource of resourcesToAllocate) {
-                    stats.total += resource.count;
-                    const allocated = this.allocateResourceToCells(resource, availableCells, radius);
-                    stats.allocated += allocated;
-                    if (allocated < resource.count) {
-                        stats.insufficient.push({
-                            name: resource.name,
-                            required: resource.count,
-                            allocated: allocated
-                        });
+                    if (availableCells.length === 0) {
+                        alert('没有可用的格子生成资源！请先清除剔除或选择其他格子。');
+                        return;
                     }
+
+                    // 准备要分配到每个格子的资源列表
+                    const resourcesPerCell = [];
+                    if (farmCount > 0) resourcesPerCell.push({ id: 5001, name: '联盟农场', qty: farmCount });
+                    if (woodCount > 0) resourcesPerCell.push({ id: 5002, name: '联盟伐木厂', qty: woodCount });
+                    if (mineCount > 0) resourcesPerCell.push({ id: 5003, name: '联盟煤矿厂', qty: mineCount });
+                    if (ironCount > 0) resourcesPerCell.push({ id: 5004, name: '联盟铁矿厂', qty: ironCount });
+
+                    // 记录分配统计
+                    const stats = {
+                        totalCells: availableCells.length,
+                        resourcesPerCell: resourcesPerCell.length,
+                        totalResources: availableCells.length * resourcesPerCell.length,
+                        generated: 0
+                    };
+
+                    // 为每个可用格子添加所有指定的资源
+                    for (const cell of availableCells) {
+                        // 检查半径限制
+                        let canAddResources = true;
+
+                        // 对于每种要添加的资源，检查是否满足半径限制
+                        for (const resource of resourcesPerCell) {
+                            if (!this.isCellValidForResource(cell, resource.id, radius)) {
+                                canAddResources = false;
+                                break;
+                            }
+                        }
+
+                        // 如果满足半径限制，添加资源到格子
+                        if (canAddResources) {
+                            if (!cell.resources) {
+                                cell.resources = [];
+                            }
+
+                            // 添加所有资源类型到这个格子
+                            for (const resource of resourcesPerCell) {
+                                // 检查是否已有相同资源，如果有则更新数量
+                                const existingResource = cell.resources.find(r => r.id === resource.id);
+                                if (existingResource) {
+                                    existingResource.qty += resource.qty;
+                                } else {
+                                    cell.resources.push({
+                                        id: resource.id,
+                                        name: resource.name,
+                                        type: 3,
+                                        qty: resource.qty
+                                    });
+                                }
+                                stats.generated++;
+                            }
+                        }
+                    }
+
+                    // 更新显示和统计
+                    this.drawMap();
+                    this.showResourceStats(stats);
                 }
 
-                // 更新显示和统计
-                this.drawMap();
-                this.showResourceStats(stats);
-            }
+                // 将资源分配到格子
+                allocateResourceToCells(resource, availableCells, radius) {
+                    // 复制可用格子列表，避免修改原数组
+                    const cells = [...availableCells];
+                    let allocated = 0;
 
-            // 将资源分配到格子
-            allocateResourceToCells(resource, availableCells, radius) {
-                // 复制可用格子列表，避免修改原数组
-                const cells = [...availableCells];
-                let allocated = 0;
+                    // 随机打乱格子顺序，使分配更加随机
+                    for (let i = cells.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [cells[i], cells[j]] = [cells[j], cells[i]];
+                    }
 
-                // 随机打乱格子顺序，使分配更加随机
-                for (let i = cells.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [cells[i], cells[j]] = [cells[j], cells[i]];
-                }
+                    // 为每个资源单位分配格子
+                    for (let i = 0; i < resource.count && cells.length > 0; i++) {
+                        // 找到一个符合半径限制的格子
+                        let foundCell = null;
+                        for (let j = 0; j < cells.length; j++) {
+                            const cell = cells[j];
+                            if (this.isCellValidForResource(cell, resource.id, radius)) {
+                                foundCell = cell;
+                                cells.splice(j, 1); // 从可用列表中移除
+                                break;
+                            }
+                        }
 
-                // 为每个资源单位分配格子
-                for (let i = 0; i < resource.count && cells.length > 0; i++) {
-                    // 找到一个符合半径限制的格子
-                    let foundCell = null;
-                    for (let j = 0; j < cells.length; j++) {
-                        const cell = cells[j];
-                        if (this.isCellValidForResource(cell, resource.id, radius)) {
-                            foundCell = cell;
-                            cells.splice(j, 1); // 从可用列表中移除
+                        if (foundCell) {
+                            // 添加资源到格子
+                            if (!foundCell.resources) {
+                                foundCell.resources = [];
+                            }
+                            foundCell.resources.push({
+                                id: resource.id,
+                                name: resource.name,
+                                type: 3,
+                                qty: 1
+                            });
+                            allocated++;
+                        } else {
+                            // 没有找到符合的格子，停止分配
                             break;
                         }
                     }
 
-                    if (foundCell) {
-                        // 添加资源到格子
-                        if (!foundCell.resources) {
-                            foundCell.resources = [];
+                    return allocated;
+                }
+
+                // 检查格子是否可以放置资源（考虑半径限制）
+                isCellValidForResource(cell, resourceId, radius) {
+                    if (radius === 0) return true;
+
+                    // 获取当前格子的中心点坐标
+                    const cellCenter = this.getCellCenter(cell);
+
+                    // 检查半径内的其他格子是否有相同类型的资源
+                    for (const otherCell of this.cells) {
+                        if (otherCell.id === cell.id) continue;
+
+                        // 检查其他格子是否有相同类型的资源
+                        if (otherCell.resources && otherCell.resources.some(r => r.id === resourceId)) {
+                            // 获取其他格子的中心点坐标
+                            const otherCenter = this.getCellCenter(otherCell);
+
+                            // 计算两个格子中心点之间的像素距离
+                            const distance = Math.sqrt(
+                                Math.pow(cellCenter.x - otherCenter.x, 2) +
+                                Math.pow(cellCenter.y - otherCenter.y, 2)
+                            );
+
+                            // 如果距离小于半径限制，不能放置
+                            if (distance < radius) {
+                                return false;
+                            }
                         }
-                        foundCell.resources.push({
-                            id: resource.id,
-                            name: resource.name,
-                            type: 3,
-                            qty: 1
-                        });
-                        allocated++;
+                    }
+
+                    return true;
+                }
+
+                // 获取格子的中心点坐标
+                getCellCenter(cell) {
+                    // 计算格子多边形的中心点
+                    let sumX = 0, sumY = 0;
+                    for (const point of cell.coordinates) {
+                        sumX += point[0];
+                        sumY += point[1];
+                    }
+                    return {
+                        x: sumX / cell.coordinates.length,
+                        y: sumY / cell.coordinates.length
+                    };
+                }
+
+                // 获取格子在圈层中的位置
+                getCellPositionInLayer(cell) {
+                    const layerCells = this.cells.filter(c => c.layer === cell.layer);
+                    for (let i = 0; i < layerCells.length; i++) {
+                        if (layerCells[i].id === cell.id) {
+                            return i;
+                        }
+                    }
+                    return -1;
+                }
+
+                // 清除联盟资源
+                clearAllianceResources(showAlert = true) {
+                    let clearedCount = 0;
+                    for (const cell of this.cells) {
+                        if (cell.resources) {
+                            const allianceResources = cell.resources.filter(r => r.type === 3);
+                            clearedCount += allianceResources.length;
+                            cell.resources = cell.resources.filter(r => r.type !== 3);
+                        }
+                    }
+
+                    this.drawMap();
+                    document.getElementById('resourceStats').style.display = 'none';
+
+                    if (showAlert && clearedCount > 0) {
+                        alert(`已清除 ${clearedCount} 个联盟资源！`);
+                    }
+                }
+
+                // 显示资源统计
+                showResourceStats(stats) {
+                    const statsDiv = document.getElementById('resourceStats');
+                    const contentDiv = document.getElementById('statsContent');
+
+                    let html = `<strong>联盟资源生成统计：</strong><br>`;
+                    html += `可用格子数：${stats.totalCells} 个<br>`;
+                    html += `每个格子资源种类：${stats.resourcesPerCell} 种<br>`;
+                    html += `应生成资源总数：${stats.totalResources} 个<br>`;
+                    html += `实际生成资源数：${stats.generated} 个<br>`;
+
+                    if (stats.generated < stats.totalResources) {
+                        const notGenerated = stats.totalResources - stats.generated;
+                        html += `<br><strong style="color: #ff5722;">⚠️ 因半径限制未能生成：${notGenerated} 个资源</strong><br>`;
+                        html += `<small style="color: #666;">提示：您可以尝试减小半径限制或清除一些剔除的格子</small>`;
                     } else {
-                        // 没有找到符合的格子，停止分配
-                        break;
+                        html += `<br><strong style="color: #4caf50;">✅ 所有资源已成功生成！</strong>`;
                     }
-                }
 
-                return allocated;
-            }
-
-            // 检查格子是否可以放置资源（考虑半径限制）
-            isCellValidForResource(cell, resourceId, radius) {
-                if (radius === 0) return true;
-
-                // 获取当前格子的中心点坐标
-                const cellCenter = this.getCellCenter(cell);
-
-                // 检查半径内的其他格子是否有相同类型的资源
-                for (const otherCell of this.cells) {
-                    if (otherCell.id === cell.id) continue;
-
-                    // 检查其他格子是否有相同类型的资源
-                    if (otherCell.resources && otherCell.resources.some(r => r.id === resourceId)) {
-                        // 获取其他格子的中心点坐标
-                        const otherCenter = this.getCellCenter(otherCell);
-
-                        // 计算两个格子中心点之间的像素距离
-                        const distance = Math.sqrt(
-                            Math.pow(cellCenter.x - otherCenter.x, 2) +
-                            Math.pow(cellCenter.y - otherCenter.y, 2)
-                        );
-
-                        // 如果距离小于半径限制，不能放置
-                        if (distance < radius) {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            }
-
-            // 获取格子的中心点坐标
-            getCellCenter(cell) {
-                // 计算格子多边形的中心点
-                let sumX = 0, sumY = 0;
-                for (const point of cell.coordinates) {
-                    sumX += point[0];
-                    sumY += point[1];
-                }
-                return {
-                    x: sumX / cell.coordinates.length,
-                    y: sumY / cell.coordinates.length
-                };
-            }
-
-            // 获取格子在圈层中的位置
-            getCellPositionInLayer(cell) {
-                const layerCells = this.cells.filter(c => c.layer === cell.layer);
-                for (let i = 0; i < layerCells.length; i++) {
-                    if (layerCells[i].id === cell.id) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-
-            // 清除联盟资源
-            clearAllianceResources(showAlert = true) {
-                let clearedCount = 0;
-                for (const cell of this.cells) {
-                    if (cell.resources) {
-                        const allianceResources = cell.resources.filter(r => r.type === 3);
-                        clearedCount += allianceResources.length;
-                        cell.resources = cell.resources.filter(r => r.type !== 3);
-                    }
-                }
-
-                this.drawMap();
-                document.getElementById('resourceStats').style.display = 'none';
-
-                if (showAlert && clearedCount > 0) {
-                    alert(`已清除 ${clearedCount} 个联盟资源！`);
+                    contentDiv.innerHTML = html;
+                    statsDiv.style.display = 'block';
                 }
             }
 
-            // 显示资源统计
-            showResourceStats(stats) {
-                const statsDiv = document.getElementById('resourceStats');
-                const contentDiv = document.getElementById('statsContent');
+            // instantiate
+            window.addEventListener('DOMContentLoaded', () => {
+                window.mapTools = new MapTools();
+            });
+        </script>
+        <script src="layout-toggle.js"></script>
+    </body>
 
-                let html = `<strong>资源生成统计：</strong><br>`;
-                html += `总计需要：${stats.total} 个<br>`;
-                html += `成功生成：${stats.allocated} 个<br>`;
-
-                if (stats.insufficient.length > 0) {
-                    html += `<br><strong style="color: #ff5722;">⚠️ 资源不足：</strong><br>`;
-                    for (const item of stats.insufficient) {
-                        html += `${item.name}：需要 ${item.required} 个，只能生成 ${item.allocated} 个<br>`;
-                    }
-                    html += `<br><small style="color: #666;">提示：您可以尝试减少资源数量或增加可用格子数量</small>`;
-                } else {
-                    html += `<br><strong style="color: #4caf50;">✅ 所有资源已成功生成！</strong>`;
-                }
-
-                contentDiv.innerHTML = html;
-                statsDiv.style.display = 'block';
-            }
-        }
-
-        // instantiate
-        window.addEventListener('DOMContentLoaded', () => {
-            window.mapTools = new MapTools();
-        });
-    </script>
-	<script src="layout-toggle.js"></script>
-</body>
 </html>
